@@ -2,9 +2,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  User, Package, MapPin, CreditCard, Settings, LogOut, Store, Shield, ChevronRight, ShoppingBag
+  User, Package, MapPin, CreditCard, Settings, LogOut, Store, Shield, ChevronRight, MessageCircle, Bell, DollarSign
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const Profile = () => {
   const { user, profile, roles, signOut } = useAuth();
@@ -26,8 +25,12 @@ const Profile = () => {
   const menuItems = [
     { icon: Package, label: "My Orders", path: "/orders" },
     { icon: MapPin, label: "Addresses", path: "/addresses" },
-    { icon: CreditCard, label: "Payment Methods", path: "/payments" },
-    ...(isSeller ? [{ icon: Store, label: "Seller Dashboard", path: "/seller" }] : []),
+    { icon: MessageCircle, label: "Messages", path: "/messages" },
+    { icon: Bell, label: "Notifications", path: "/notifications" },
+    ...(isSeller ? [
+      { icon: Store, label: "Seller Dashboard", path: "/seller" },
+      { icon: DollarSign, label: "Wallet", path: "/seller/wallet" },
+    ] : []),
     ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", path: "/admin" }] : []),
     { icon: Settings, label: "Settings", path: "/settings" },
   ];

@@ -3,11 +3,21 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, DollarSign, ShoppingCart, Plus, ArrowLeft, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Package, DollarSign, ShoppingCart, Plus, TrendingUp, Wallet, MessageCircle,
+  Bell, Settings, User, Store, Filter, ChevronRight
+} from "lucide-react";
+import BannerSlideshow from "@/components/BannerSlideshow";
+
+const sellerBanners = [
+  { title: "Grow Your Sales", subtitle: "Reach millions of buyers today", gradient: "bg-gradient-to-r from-primary to-secondary", emoji: "📈" },
+  { title: "Seller Tools", subtitle: "Analytics, insights, and more", gradient: "bg-gradient-to-br from-secondary to-accent", emoji: "🛠️" },
+  { title: "Low Fees", subtitle: "Keep more of your earnings", gradient: "bg-gradient-to-r from-accent to-primary", emoji: "💰" },
+];
 
 const SellerDashboard = () => {
-  const { user, roles } = useAuth();
+  const { user, roles, profile } = useAuth();
   const navigate = useNavigate();
   const isSeller = roles.includes("seller");
 
@@ -28,6 +38,16 @@ const SellerDashboard = () => {
     enabled: !!user && isSeller,
   });
 
+  const { data: wallet } = useQuery({
+    queryKey: ["seller-wallet", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase.from("seller_wallets").select("*").eq("seller_id", user.id).maybeSingle();
+      return data;
+    },
+    enabled: !!user && isSeller,
+  });
+
   if (!isSeller) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -36,52 +56,121 @@ const SellerDashboard = () => {
     );
   }
 
+  const quickActions = [
+    { icon: Package, label: "Products", path: "/seller/products", color: "text-primary" },
+    { icon: Plus, label: "Add Product", path: "/seller/products/new", color: "text-success" },
+    { icon: ShoppingCart, label: "Orders", path: "/seller/orders", color: "text-secondary" },
+    { icon: Wallet, label: "Wallet", path: "/seller/wallet", color: "text-accent" },
+    { icon: MessageCircle, label: "Messages", path: "/messages", color: "text-primary" },
+    { icon: Bell, label: "Notifications", path: "/notifications", color: "text-destructive" },
+    { icon: Store, label: "Store Profile", path: "/seller/profile", color: "text-secondary" },
+    { icon: Settings, label: "Settings", path: "/settings", color: "text-muted-foreground" },
+  ];
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 flex items-center justify-between bg-card px-4 py-3 shadow-sm">
-        <div className="flex items-center gap-3">
-          <Link to="/profile"><ArrowLeft className="h-5 w-5" /></Link>
-          <h1 className="text-lg font-bold">Seller Dashboard</h1>
+    <div className="min-h-screen bg-background pb-4">
+      {/* Header */}
+      <header className="bg-primary px-4 pb-4 pt-safe">
+        <div className="flex items-center justify-between pt-3">
+          <div>
+            <p className="text-sm text-primary-foreground/80">Welcome back,</p>
+            <h1 className="text-xl font-bold text-primary-foreground">
+              {profile?.store_name || profile?.display_name || "Seller"}
+            </h1>
+          </div>
+          <div className="flex gap-2">
+            <Link to="/notifications" className="text-primary-foreground">
+              <Bell className="h-5 w-5" />
+            </Link>
+            <Link to="/messages" className="text-primary-foreground">
+              <MessageCircle className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
-        <Button size="sm" onClick={() => navigate("/seller/products/new")}>
-          <Plus className="mr-1 h-4 w-4" /> Add Product
-        </Button>
       </header>
 
-      <div className="grid grid-cols-3 gap-3 p-4">
+      {/* Banner */}
+      <BannerSlideshow slides={sellerBanners} />
+
+      {/* Stats */}
+      <div className="grid grid-cols-3 gap-3 px-4 mt-4">
         <Card>
-          <CardContent className="flex flex-col items-center p-4">
-            <Package className="h-6 w-6 text-primary mb-1" />
-            <p className="text-2xl font-bold">{stats?.productCount ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Products</p>
+          <CardContent className="flex flex-col items-center p-3">
+            <Package className="h-5 w-5 text-primary mb-1" />
+            <p className="text-xl font-bold">{stats?.productCount ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">Products</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex flex-col items-center p-4">
-            <ShoppingCart className="h-6 w-6 text-secondary mb-1" />
-            <p className="text-2xl font-bold">{stats?.orderCount ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Orders</p>
+          <CardContent className="flex flex-col items-center p-3">
+            <ShoppingCart className="h-5 w-5 text-secondary mb-1" />
+            <p className="text-xl font-bold">{stats?.orderCount ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">Orders</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="flex flex-col items-center p-4">
-            <DollarSign className="h-6 w-6 text-success mb-1" />
-            <p className="text-2xl font-bold">${stats?.revenue?.toFixed(0) ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Revenue</p>
+          <CardContent className="flex flex-col items-center p-3">
+            <DollarSign className="h-5 w-5 text-success mb-1" />
+            <p className="text-xl font-bold">${stats?.revenue?.toFixed(0) ?? 0}</p>
+            <p className="text-[10px] text-muted-foreground">Revenue</p>
           </CardContent>
         </Card>
       </div>
 
-      <div className="space-y-2 px-4">
-        <Link to="/seller/products" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
-          <Package className="h-5 w-5 text-muted-foreground" />
-          <span className="flex-1 font-medium">Manage Products</span>
-        </Link>
-        <Link to="/seller/orders" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
-          <ShoppingCart className="h-5 w-5 text-muted-foreground" />
-          <span className="flex-1 font-medium">Manage Orders</span>
+      {/* Wallet Card */}
+      <div className="px-4 mt-4">
+        <Link to="/seller/wallet">
+          <Card className="bg-gradient-to-r from-primary to-secondary text-primary-foreground">
+            <CardContent className="flex items-center gap-3 p-4">
+              <Wallet className="h-8 w-8" />
+              <div>
+                <p className="text-sm opacity-90">Wallet Balance</p>
+                <p className="text-2xl font-extrabold">${wallet?.balance?.toFixed(2) ?? "0.00"}</p>
+              </div>
+              <ChevronRight className="ml-auto h-5 w-5 opacity-60" />
+            </CardContent>
+          </Card>
         </Link>
       </div>
+
+      {/* Quick Actions Grid */}
+      <section className="px-4 mt-4">
+        <h2 className="text-lg font-bold mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-4 gap-3">
+          {quickActions.map((action) => (
+            <Link
+              key={action.path}
+              to={action.path}
+              className="flex flex-col items-center gap-1.5 rounded-xl bg-card p-3 shadow-sm transition-shadow hover:shadow-md"
+            >
+              <action.icon className={`h-6 w-6 ${action.color}`} />
+              <span className="text-[10px] font-medium text-center leading-tight">{action.label}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* Recent Activity */}
+      <section className="px-4 mt-4">
+        <h2 className="text-lg font-bold mb-3">Manage</h2>
+        <div className="space-y-2">
+          <Link to="/seller/products" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
+            <Package className="h-5 w-5 text-muted-foreground" />
+            <span className="flex-1 font-medium">Manage Products</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link to="/seller/orders" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
+            <ShoppingCart className="h-5 w-5 text-muted-foreground" />
+            <span className="flex-1 font-medium">Manage Orders</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link to="/seller/wallet" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
+            <Wallet className="h-5 w-5 text-muted-foreground" />
+            <span className="flex-1 font-medium">Wallet & Earnings</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </div>
+      </section>
     </div>
   );
 };
