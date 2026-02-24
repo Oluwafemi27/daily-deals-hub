@@ -13,9 +13,17 @@ import Cart from "./pages/Cart";
 import Wishlist from "./pages/Wishlist";
 import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
+import Messages from "./pages/Messages";
+import Notifications from "./pages/Notifications";
+import Orders from "./pages/Orders";
+import Addresses from "./pages/Addresses";
+import Settings from "./pages/Settings";
 import SellerDashboard from "./pages/seller/SellerDashboard";
 import SellerProducts from "./pages/seller/SellerProducts";
 import AddProduct from "./pages/seller/AddProduct";
+import SellerWallet from "./pages/seller/SellerWallet";
+import SellerOrders from "./pages/seller/SellerOrders";
+import SellerProfile from "./pages/seller/SellerProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,9 +46,17 @@ const App = () => (
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="/notifications" element={<Notifications />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/addresses" element={<Addresses />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="/seller" element={<SellerDashboard />} />
               <Route path="/seller/products" element={<SellerProducts />} />
               <Route path="/seller/products/new" element={<AddProduct />} />
+              <Route path="/seller/wallet" element={<SellerWallet />} />
+              <Route path="/seller/orders" element={<SellerOrders />} />
+              <Route path="/seller/profile" element={<SellerProfile />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

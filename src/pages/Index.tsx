@@ -1,13 +1,24 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Bell, ChevronRight, Star, Zap } from "lucide-react";
+import { Search, Bell, ChevronRight, Star, Zap, MessageCircle, DollarSign, TrendingUp, Package, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/contexts/AuthContext";
+import { Card, CardContent } from "@/components/ui/card";
+import BannerSlideshow from "@/components/BannerSlideshow";
+
+const buyerBanners = [
+  { title: "Up to 90% OFF", subtitle: "New user exclusive offers", gradient: "bg-gradient-to-r from-primary to-secondary", emoji: "⚡" },
+  { title: "Free Shipping", subtitle: "On orders over $15", gradient: "bg-gradient-to-r from-secondary to-primary", emoji: "🚚" },
+  { title: "Flash Deals", subtitle: "Limited time only — grab now!", gradient: "bg-gradient-to-br from-accent to-primary", emoji: "🔥" },
+];
 
 const Index = () => {
+  const { user } = useAuth();
+
   const { data: categories = [], isLoading: catLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -29,20 +40,23 @@ const Index = () => {
     },
   });
 
-  const { data: promotions = [] } = useQuery({
-    queryKey: ["promotions"],
+  // Buyer spending
+  const { data: totalSpent = 0 } = useQuery({
+    queryKey: ["buyer-spending", user?.id],
     queryFn: async () => {
+      if (!user) return 0;
       const { data } = await supabase
-        .from("promotions")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order");
-      return data ?? [];
+        .from("orders")
+        .select("total")
+        .eq("buyer_id", user.id)
+        .in("status", ["processing", "shipped", "delivered"]);
+      return (data ?? []).reduce((sum: number, o: any) => sum + Number(o.total), 0);
     },
+    enabled: !!user,
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background pb-4">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-primary px-4 pb-3 pt-safe">
         <div className="flex items-center gap-3 pt-3">
@@ -52,46 +66,60 @@ const Index = () => {
               placeholder="Search products..."
               className="h-10 rounded-full border-none bg-card pl-10 text-sm shadow-sm"
               readOnly
-              onClick={() => {}}
             />
           </div>
-          <Link to="/profile" className="relative text-primary-foreground">
+          <Link to="/notifications" className="relative text-primary-foreground">
             <Bell className="h-6 w-6" />
+          </Link>
+          <Link to="/messages" className="relative text-primary-foreground">
+            <MessageCircle className="h-6 w-6" />
           </Link>
         </div>
       </header>
 
-      {/* Banner */}
-      {promotions.length > 0 && (
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex gap-3 p-4">
-            {promotions.map((promo: any) => (
-              <div
-                key={promo.id}
-                className="min-w-[85vw] overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-secondary p-6 text-primary-foreground shadow-lg sm:min-w-[400px]"
-              >
-                <h3 className="text-lg font-bold">{promo.title}</h3>
-                {promo.description && <p className="mt-1 text-sm opacity-90">{promo.description}</p>}
-              </div>
-            ))}
-          </div>
+      {/* Banner Slideshow */}
+      <BannerSlideshow slides={buyerBanners} />
+
+      {/* Quick Action Buttons */}
+      {user && (
+        <div className="grid grid-cols-4 gap-2 px-4 mt-4">
+          <Link to="/orders" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
+            <Package className="h-5 w-5 text-primary" />
+            <span className="text-[10px] font-medium">Orders</span>
+          </Link>
+          <Link to="/messages" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
+            <MessageCircle className="h-5 w-5 text-secondary" />
+            <span className="text-[10px] font-medium">Messages</span>
+          </Link>
+          <Link to="/wishlist" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
+            <Heart className="h-5 w-5 text-destructive" />
+            <span className="text-[10px] font-medium">Wishlist</span>
+          </Link>
+          <Link to="/notifications" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
+            <Bell className="h-5 w-5 text-accent" />
+            <span className="text-[10px] font-medium">Alerts</span>
+          </Link>
         </div>
       )}
-      {promotions.length === 0 && (
-        <div className="p-4">
-          <div className="overflow-hidden rounded-2xl bg-gradient-to-r from-primary to-secondary p-6 text-primary-foreground shadow-lg">
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">Welcome Deal</span>
-            </div>
-            <h3 className="mt-2 text-2xl font-extrabold">Up to 90% OFF</h3>
-            <p className="mt-1 text-sm opacity-90">New user exclusive offers</p>
-          </div>
+
+      {/* Spending Card */}
+      {user && totalSpent > 0 && (
+        <div className="mx-4 mt-4">
+          <Card className="bg-gradient-to-r from-success to-primary/80 text-primary-foreground">
+            <CardContent className="flex items-center gap-3 p-4">
+              <DollarSign className="h-8 w-8" />
+              <div>
+                <p className="text-sm opacity-90">Total Spent</p>
+                <p className="text-2xl font-extrabold">${totalSpent.toFixed(2)}</p>
+              </div>
+              <TrendingUp className="ml-auto h-6 w-6 opacity-60" />
+            </CardContent>
+          </Card>
         </div>
       )}
 
       {/* Categories */}
-      <section className="px-4 py-2">
+      <section className="px-4 py-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">Categories</h2>
           <Link to="/categories" className="flex items-center text-sm text-primary">
@@ -107,11 +135,7 @@ const Index = () => {
                 </div>
               ))
             : categories.slice(0, 8).map((cat: any) => (
-                <Link
-                  key={cat.id}
-                  to={`/categories/${cat.id}`}
-                  className="flex flex-col items-center gap-1"
-                >
+                <Link key={cat.id} to={`/categories/${cat.id}`} className="flex flex-col items-center gap-1">
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted text-2xl">
                     {cat.icon || "📦"}
                   </div>
@@ -122,7 +146,7 @@ const Index = () => {
       </section>
 
       {/* Products Grid */}
-      <section className="px-4 py-4">
+      <section className="px-4 py-2">
         <h2 className="mb-3 text-lg font-bold">Recommended for you</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {prodLoading
@@ -141,12 +165,7 @@ const Index = () => {
                 >
                   <div className="relative aspect-square overflow-hidden bg-muted">
                     {product.images?.[0] ? (
-                      <img
-                        src={product.images[0]}
-                        alt={product.title}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        loading="lazy"
-                      />
+                      <img src={product.images[0]} alt={product.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" loading="lazy" />
                     ) : (
                       <div className="flex h-full items-center justify-center text-4xl text-muted-foreground">📦</div>
                     )}
@@ -159,9 +178,7 @@ const Index = () => {
                   <div className="p-2.5">
                     <p className="text-xs line-clamp-2 leading-snug text-foreground">{product.title}</p>
                     <div className="mt-1.5 flex items-baseline gap-1.5">
-                      <span className="text-base font-extrabold text-primary">
-                        ${product.discount_price ?? product.price}
-                      </span>
+                      <span className="text-base font-extrabold text-primary">${product.discount_price ?? product.price}</span>
                       {product.discount_price && product.discount_price < product.price && (
                         <span className="text-xs text-muted-foreground line-through">${product.price}</span>
                       )}
