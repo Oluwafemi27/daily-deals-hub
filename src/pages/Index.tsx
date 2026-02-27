@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Search, Bell, ChevronRight, Star, Zap, MessageCircle, DollarSign, TrendingUp, Package, Heart } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,7 +17,11 @@ const buyerBanners = [
 ];
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, roles } = useAuth();
+  const isSeller = roles.includes("seller") && !roles.includes("buyer");
+
+  // If pure seller (not also a buyer), redirect to seller dashboard
+  if (isSeller) return <Navigate to="/seller" replace />;
 
   const { data: categories = [], isLoading: catLoading } = useQuery({
     queryKey: ["categories"],
