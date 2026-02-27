@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Search, Bell, ChevronRight, Star, Zap, MessageCircle, DollarSign, TrendingUp, Package, Heart } from "lucide-react";
+import { Search, Bell, ChevronRight, Star, Zap, MessageCircle, DollarSign, TrendingUp, Package, Heart, LayoutGrid } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Link, Navigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import BannerSlideshow from "@/components/BannerSlideshow";
+import CategorySlider from "@/components/CategorySlider";
 
 const buyerBanners = [
   { title: "Up to 90% OFF", subtitle: "New user exclusive offers", gradient: "bg-gradient-to-r from-primary to-secondary", emoji: "⚡" },
@@ -86,7 +87,8 @@ const Index = () => {
 
       {/* Quick Action Buttons */}
       {user && (
-        <div className="grid grid-cols-4 gap-2 px-4 mt-4">
+        <div className="grid grid-cols-5 gap-2 px-4 mt-4">
+          <CategorySlider />
           <Link to="/orders" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
             <Package className="h-5 w-5 text-primary" />
             <span className="text-[10px] font-medium">Orders</span>
