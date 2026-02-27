@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import AppLayout from "@/components/layout/AppLayout";
+import CustomerServiceBot from "@/components/CustomerServiceBot";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
@@ -24,6 +25,13 @@ import AddProduct from "./pages/seller/AddProduct";
 import SellerWallet from "./pages/seller/SellerWallet";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerProfile from "./pages/seller/SellerProfile";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminReports from "./pages/admin/AdminReports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +46,18 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            {/* Admin routes - separate from buyer/seller layout */}
+            <Route path="/admin-panel" element={<AdminDashboard />} />
+            <Route path="/admin-panel/users" element={<AdminUsers />} />
+            <Route path="/admin-panel/products" element={<AdminProducts />} />
+            <Route path="/admin-panel/orders" element={<AdminOrders />} />
+            <Route path="/admin-panel/categories" element={<AdminCategories />} />
+            <Route path="/admin-panel/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin-panel/reports" element={<AdminReports />} />
+            <Route path="/admin-panel/notifications" element={<Notifications />} />
+            <Route path="/admin-panel/messages" element={<Messages />} />
+            <Route path="/admin-panel/settings" element={<Settings />} />
+            {/* Main app layout for buyers & sellers */}
             <Route element={<AppLayout />}>
               <Route path="/" element={<Index />} />
               <Route path="/categories" element={<Categories />} />
@@ -60,6 +80,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CustomerServiceBot />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

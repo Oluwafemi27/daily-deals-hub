@@ -31,7 +31,7 @@ const Profile = () => {
       { icon: Store, label: "Seller Dashboard", path: "/seller" },
       { icon: DollarSign, label: "Wallet", path: "/seller/wallet" },
     ] : []),
-    ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", path: "/admin" }] : []),
+    ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", path: "/admin-panel" }] : []),
     { icon: Settings, label: "Settings", path: "/settings" },
   ];
 
