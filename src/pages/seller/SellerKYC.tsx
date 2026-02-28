@@ -5,8 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, CheckCircle, Clock, XCircle } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, CheckCircle, Clock, XCircle, Camera } from "lucide-react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -22,18 +22,17 @@ interface KYCData {
   date_of_birth: string;
   id_type: string;
   id_number: string;
+  nin: string;
+  face_photo: string | null;
   address: string;
   city: string;
   state: string;
   postal_code: string;
   country: string;
-  business_name: string;
-  business_registration_number: string;
-  tax_id: string;
   bank_account_name: string;
   bank_account_number: string;
   bank_name: string;
-  bank_code: string;
+  bvn: string;
 }
 
 const SellerKYC = () => {
@@ -41,9 +40,13 @@ const SellerKYC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Partial<KYCData>>({
-    country: "US",
-    id_type: "national_id",
+    country: "NG",
+    id_type: "nin",
+    face_photo: null,
   });
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [cameraActive, setCameraActive] = useState(false);
 
   const { data: kycStatus } = useQuery({
     queryKey: ["seller-kyc", user?.id],
@@ -90,6 +93,43 @@ const SellerKYC = () => {
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setCameraActive(true);
+      }
+    } catch (error) {
+      toast.error("Failed to access camera. Please check permissions.");
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => track.stop());
+      setCameraActive(false);
+    }
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      if (context) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+        context.drawImage(videoRef.current, 0, 0);
+        const photoData = canvasRef.current.toDataURL("image/jpeg");
+        setFormData((prev) => ({ ...prev, face_photo: photoData }));
+        stopCamera();
+        toast.success("Photo captured successfully");
+      }
+    }
   };
 
   const getStatusDisplay = () => {
@@ -209,7 +249,7 @@ const SellerKYC = () => {
                     ID Type *
                   </label>
                   <Select
-                    value={formData.id_type || "national_id"}
+                    value={formData.id_type || "nin"}
                     onValueChange={(value) =>
                       setFormData((prev) => ({ ...prev, id_type: value }))
                     }
@@ -218,12 +258,10 @@ const SellerKYC = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="nin">NIN (National ID)</SelectItem>
                       <SelectItem value="passport">Passport</SelectItem>
                       <SelectItem value="driver_license">Driver License</SelectItem>
-                      <SelectItem value="national_id">National ID</SelectItem>
-                      <SelectItem value="business_registration">
-                        Business Registration
-                      </SelectItem>
+                      <SelectItem value="national_id">National ID Card</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -240,6 +278,87 @@ const SellerKYC = () => {
                     required
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    NIN (National Identification Number) *
+                  </label>
+                  <Input
+                    name="nin"
+                    value={formData.nin || ""}
+                    onChange={handleInputChange}
+                    placeholder="11-digit NIN (e.g., 12345678901)"
+                    maxLength={11}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Face Capture */}
+              <div className="space-y-3 pb-4 border-b">
+                <h3 className="font-semibold">Face Verification</h3>
+
+                {!formData.face_photo ? (
+                  <div className="space-y-3">
+                    {!cameraActive ? (
+                      <Button
+                        type="button"
+                        onClick={startCamera}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Camera className="h-4 w-4 mr-2" />
+                        Start Camera & Capture Face
+                      </Button>
+                    ) : (
+                      <div className="space-y-3">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          className="w-full rounded-lg bg-black"
+                        />
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            onClick={capturePhoto}
+                            className="flex-1 bg-green-600 hover:bg-green-700"
+                          >
+                            Capture Photo
+                          </Button>
+                          <Button
+                            type="button"
+                            onClick={stopCamera}
+                            variant="outline"
+                            className="flex-1"
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <img
+                      src={formData.face_photo}
+                      alt="Face capture"
+                      className="w-full rounded-lg"
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => setFormData((prev) => ({ ...prev, face_photo: null }))}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Retake Photo
+                    </Button>
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  📸 A clear photo of your face is required for verification
+                </p>
               </div>
 
               {/* Address */}
@@ -304,52 +423,11 @@ const SellerKYC = () => {
                     </label>
                     <Input
                       name="country"
-                      value={formData.country || ""}
+                      value={formData.country || "NG"}
                       onChange={handleInputChange}
                       placeholder="Country"
                     />
                   </div>
-                </div>
-              </div>
-
-              {/* Business Information */}
-              <div className="space-y-3 pb-4 border-b">
-                <h3 className="font-semibold">Business Information</h3>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Business Name
-                  </label>
-                  <Input
-                    name="business_name"
-                    value={formData.business_name || ""}
-                    onChange={handleInputChange}
-                    placeholder="Your business name"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Business Registration Number
-                  </label>
-                  <Input
-                    name="business_registration_number"
-                    value={formData.business_registration_number || ""}
-                    onChange={handleInputChange}
-                    placeholder="Registration number"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Tax ID
-                  </label>
-                  <Input
-                    name="tax_id"
-                    value={formData.tax_id || ""}
-                    onChange={handleInputChange}
-                    placeholder="Tax ID or EIN"
-                  />
                 </div>
               </div>
 
@@ -381,29 +459,33 @@ const SellerKYC = () => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Bank Name
-                    </label>
-                    <Input
-                      name="bank_name"
-                      value={formData.bank_name || ""}
-                      onChange={handleInputChange}
-                      placeholder="Bank name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Bank Code
-                    </label>
-                    <Input
-                      name="bank_code"
-                      value={formData.bank_code || ""}
-                      onChange={handleInputChange}
-                      placeholder="SWIFT/Routing code"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    BVN (Bank Verification Number) *
+                  </label>
+                  <Input
+                    name="bvn"
+                    value={formData.bvn || ""}
+                    onChange={handleInputChange}
+                    placeholder="11-digit BVN (e.g., 12345678901)"
+                    maxLength={11}
+                    required
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your 11-digit Bank Verification Number (BVN)
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Bank Name
+                  </label>
+                  <Input
+                    name="bank_name"
+                    value={formData.bank_name || ""}
+                    onChange={handleInputChange}
+                    placeholder="e.g., Access Bank, GTBank, etc."
+                  />
                 </div>
               </div>
 
@@ -422,6 +504,9 @@ const SellerKYC = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Hidden canvas for photo capture */}
+      <canvas ref={canvasRef} style={{ display: "none" }} />
     </div>
   );
 };
