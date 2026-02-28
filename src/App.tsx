@@ -25,6 +25,7 @@ import AddProduct from "./pages/seller/AddProduct";
 import SellerWallet from "./pages/seller/SellerWallet";
 import SellerOrders from "./pages/seller/SellerOrders";
 import SellerProfile from "./pages/seller/SellerProfile";
+import SellerKYC from "./pages/seller/SellerKYC";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -32,6 +33,9 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminReports from "./pages/admin/AdminReports";
+import AdminKYC from "./pages/admin/AdminKYC";
+import AdminNotifications from "./pages/admin/AdminNotifications";
+import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +58,9 @@ const App = () => (
             <Route path="/admin-panel/categories" element={<AdminCategories />} />
             <Route path="/admin-panel/analytics" element={<AdminAnalytics />} />
             <Route path="/admin-panel/reports" element={<AdminReports />} />
+            <Route path="/admin-panel/kyc" element={<AdminKYC />} />
+            <Route path="/admin-panel/send-notifications" element={<AdminNotifications />} />
+            <Route path="/admin-panel/activity-logs" element={<AdminActivityLogs />} />
             <Route path="/admin-panel/notifications" element={<Notifications />} />
             <Route path="/admin-panel/messages" element={<Messages />} />
             <Route path="/admin-panel/settings" element={<Settings />} />
@@ -77,6 +84,7 @@ const App = () => (
               <Route path="/seller/wallet" element={<SellerWallet />} />
               <Route path="/seller/orders" element={<SellerOrders />} />
               <Route path="/seller/profile" element={<SellerProfile />} />
+              <Route path="/seller/kyc" element={<SellerKYC />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
