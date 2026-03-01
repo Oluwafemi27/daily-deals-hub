@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +45,8 @@ const SellerKYC = () => {
     id_type: "nin",
     face_photo: null,
   });
+  const [idDocumentFile, setIdDocumentFile] = useState<File | null>(null);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
@@ -64,22 +67,56 @@ const SellerKYC = () => {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
+      if (!user?.id) throw new Error("You must be logged in");
+
+      if (!idDocumentFile) {
+        throw new Error("Please upload your ID document");
+      }
+
+      if (!formData.face_photo) {
+        throw new Error("Please capture a selfie");
+      }
+
+      const selfieFile = dataUrlToFile(formData.face_photo, "selfie.jpg");
+
+      // 1) Verify with backend (via Edge Function proxy)
+      const verificationResult = await verifyWithBackend({
+        idDocument: idDocumentFile,
+        selfie: selfieFile,
+      });
+
+      // 2) Save KYC record
+      const payload = {
+        ...formData,
+        status: "under_review" as const,
+      };
+
       if (kycStatus) {
         const { error } = await supabase
           .from("seller_kyc")
-          .update(formData)
-          .eq("seller_id", user?.id);
+          .update(payload)
+          .eq("seller_id", user.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("seller_kyc")
-          .insert([{ seller_id: user?.id, ...formData }]);
+          .insert([{ seller_id: user.id, ...payload }]);
         if (error) throw error;
       }
+
+      return verificationResult;
     },
-    onSuccess: () => {
+    onSuccess: (verificationResult: any) => {
+      const maybeMessage =
+        verificationResult?.message ||
+        verificationResult?.result ||
+        verificationResult?.status ||
+        null;
+
       toast.success(
-        kycStatus ? "KYC information updated" : "KYC submitted for verification"
+        maybeMessage
+          ? `Submitted. Verifier response: ${String(maybeMessage)}`
+          : "KYC submitted and sent to verifier"
       );
       queryClient.invalidateQueries({ queryKey: ["seller-kyc"] });
     },
@@ -87,6 +124,58 @@ const SellerKYC = () => {
       toast.error(error.message || "Failed to submit KYC");
     },
   });
+
+  const dataUrlToFile = (dataUrl: string, filename: string) => {
+    const [meta, b64] = dataUrl.split(",");
+    const mime = meta.match(/data:(.*?);base64/)?.[1] ?? "image/jpeg";
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return new File([bytes], filename, { type: mime });
+  };
+
+  const verifyWithBackend = async ({
+    idDocument,
+    selfie,
+  }: {
+    idDocument: File;
+    selfie: File;
+  }) => {
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token;
+    if (!accessToken) throw new Error("Please sign in again");
+
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+    const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+    const fd = new FormData();
+    fd.set("idDocument", idDocument, idDocument.name);
+    fd.set("selfie", selfie, selfie.name);
+
+    const resp = await fetch(`${supabaseUrl}/functions/v1/kyc-verify`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        apikey: anonKey,
+      },
+      body: fd,
+    });
+
+    const contentType = resp.headers.get("content-type") ?? "";
+    const result = contentType.includes("application/json")
+      ? await resp.json()
+      : await resp.text();
+
+    if (!resp.ok) {
+      const msg =
+        typeof result === "string"
+          ? result
+          : result?.error || result?.message || "Verification failed";
+      throw new Error(msg);
+    }
+
+    return result;
+  };
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -291,6 +380,26 @@ const SellerKYC = () => {
                     maxLength={11}
                     required
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Upload ID Document *
+                  </label>
+                  <Input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      setIdDocumentFile(file);
+                    }}
+                    required
+                  />
+                  {idDocumentFile && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Selected: {idDocumentFile.name}
+                    </p>
+                  )}
                 </div>
               </div>
 
