@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Package, DollarSign, ShoppingCart, Plus, TrendingUp, Wallet, MessageCircle,
-  Bell, Settings, User, Store, Filter, ChevronRight
+  Bell, Settings, User, Store, Filter, ChevronRight, Verified
 } from "lucide-react";
 import BannerSlideshow from "@/components/BannerSlideshow";
 
@@ -60,11 +60,11 @@ const SellerDashboard = () => {
     { icon: Package, label: "Products", path: "/seller/products", color: "text-primary" },
     { icon: Plus, label: "Add Product", path: "/seller/products/new", color: "text-success" },
     { icon: ShoppingCart, label: "Orders", path: "/seller/orders", color: "text-secondary" },
+    { icon: Verified, label: "KYC", path: "/seller/kyc", color: "text-blue-600" },
     { icon: Wallet, label: "Wallet", path: "/seller/wallet", color: "text-accent" },
     { icon: MessageCircle, label: "Messages", path: "/messages", color: "text-primary" },
     { icon: Bell, label: "Notifications", path: "/notifications", color: "text-destructive" },
     { icon: Store, label: "Store Profile", path: "/seller/profile", color: "text-secondary" },
-    { icon: Settings, label: "Settings", path: "/settings", color: "text-muted-foreground" },
   ];
 
   return (
@@ -154,6 +154,11 @@ const SellerDashboard = () => {
       <section className="px-4 mt-4">
         <h2 className="text-lg font-bold mb-3">Manage</h2>
         <div className="space-y-2">
+          <Link to="/seller/kyc" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm border-l-4 border-blue-500">
+            <Verified className="h-5 w-5 text-blue-600" />
+            <span className="flex-1 font-medium">KYC Verification</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
           <Link to="/seller/products" className="flex items-center gap-3 rounded-xl bg-card p-4 shadow-sm">
             <Package className="h-5 w-5 text-muted-foreground" />
             <span className="flex-1 font-medium">Manage Products</span>

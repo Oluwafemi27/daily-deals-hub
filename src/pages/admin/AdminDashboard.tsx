@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Users, Package, ShoppingCart, DollarSign, BarChart3, Shield,
-  Tag, Bell, MessageCircle, Settings, ChevronRight, TrendingUp, AlertTriangle
+  Tag, Bell, MessageCircle, Settings, ChevronRight, TrendingUp, AlertTriangle,
+  Verified, Send, Activity
 } from "lucide-react";
 import BannerSlideshow from "@/components/BannerSlideshow";
 
@@ -65,9 +66,9 @@ const AdminDashboard = () => {
     { icon: Package, label: "Products", path: "/admin-panel/products", color: "text-secondary" },
     { icon: ShoppingCart, label: "Orders", path: "/admin-panel/orders", color: "text-accent" },
     { icon: Tag, label: "Categories", path: "/admin-panel/categories", color: "text-success" },
-    { icon: Bell, label: "Notifications", path: "/admin-panel/notifications", color: "text-destructive" },
-    { icon: MessageCircle, label: "Messages", path: "/admin-panel/messages", color: "text-primary" },
-    { icon: BarChart3, label: "Analytics", path: "/admin-panel/analytics", color: "text-secondary" },
+    { icon: Verified, label: "KYC", path: "/admin-panel/kyc", color: "text-blue-600" },
+    { icon: Send, label: "Send Notifs", path: "/admin-panel/send-notifications", color: "text-purple-600" },
+    { icon: Activity, label: "Activity", path: "/admin-panel/activity-logs", color: "text-orange-600" },
     { icon: Settings, label: "Settings", path: "/admin-panel/settings", color: "text-muted-foreground" },
   ];
 
@@ -76,6 +77,9 @@ const AdminDashboard = () => {
     { icon: Package, label: "Moderate Products", path: "/admin-panel/products" },
     { icon: ShoppingCart, label: "Manage Orders", path: "/admin-panel/orders" },
     { icon: Tag, label: "Manage Categories", path: "/admin-panel/categories" },
+    { icon: Verified, label: "Verify Seller KYC", path: "/admin-panel/kyc" },
+    { icon: Send, label: "Send User Notifications", path: "/admin-panel/send-notifications" },
+    { icon: Activity, label: "View User Activity Logs", path: "/admin-panel/activity-logs" },
     { icon: AlertTriangle, label: "Reports & Moderation", path: "/admin-panel/reports" },
   ];
 
