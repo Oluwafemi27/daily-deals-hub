@@ -32,18 +32,19 @@ const DriverAuth = () => {
 
     // Check if user has driver role
     if (user) {
-      const { data: userData, error: userError } = await supabase
-        .from("users")
+      const { data: userRoles, error: roleError } = await supabase
+        .from("user_roles")
         .select("role")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
+        .eq("role", "driver")
         .single();
 
-      if (userError || !userData || !userData.role.includes("driver")) {
+      if (roleError || !userRoles) {
         await supabase.auth.signOut();
-        toast({ 
-          title: "Access denied", 
-          description: "You don't have driver privileges.", 
-          variant: "destructive" 
+        toast({
+          title: "Access denied",
+          description: "You don't have driver privileges.",
+          variant: "destructive"
         });
         setLoading(false);
         return;
