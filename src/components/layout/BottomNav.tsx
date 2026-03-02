@@ -1,4 +1,4 @@
-import { Home, Grid3X3, ShoppingCart, Heart, User, Store, Package, Wallet, LayoutDashboard } from "lucide-react";
+import { Home, Grid3X3, ShoppingCart, Heart, User, Store, Package, Wallet, LayoutDashboard, MapPin } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ const BottomNav = () => {
   const location = useLocation();
   const { user, roles } = useAuth();
   const isSeller = roles.includes("seller");
+  const isDriver = roles.includes("driver");
 
   const { data: cartCount = 0 } = useQuery({
     queryKey: ["cart-count", user?.id],
@@ -20,7 +21,7 @@ const BottomNav = () => {
         .eq("user_id", user.id);
       return count ?? 0;
     },
-    enabled: !!user && !isSeller,
+    enabled: !!user && !isSeller && !isDriver,
   });
 
   const buyerNav = [
@@ -39,7 +40,15 @@ const BottomNav = () => {
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
-  const navItems = isSeller ? sellerNav : buyerNav;
+  const driverNav = [
+    { icon: LayoutDashboard, label: "Dashboard", path: "/driver" },
+    { icon: MapPin, label: "Jobs", path: "/driver/jobs" },
+    { icon: Package, label: "Vehicle", path: "/driver/profile" },
+    { icon: Wallet, label: "Wallet", path: "/driver/wallet" },
+    { icon: User, label: "Profile", path: "/profile" },
+  ];
+
+  const navItems = isDriver ? driverNav : isSeller ? sellerNav : buyerNav;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card pb-safe">

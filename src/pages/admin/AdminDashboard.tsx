@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Users, Package, ShoppingCart, DollarSign, BarChart3, Shield,
   Tag, Bell, MessageCircle, Settings, ChevronRight, TrendingUp, AlertTriangle,
-  Verified, Send, Activity
+  Verified, Send, Activity, Truck
 } from "lucide-react";
 import BannerSlideshow from "@/components/BannerSlideshow";
 
@@ -66,9 +66,9 @@ const AdminDashboard = () => {
     { icon: Package, label: "Products", path: "/admin-panel/products", color: "text-secondary" },
     { icon: ShoppingCart, label: "Orders", path: "/admin-panel/orders", color: "text-accent" },
     { icon: Tag, label: "Categories", path: "/admin-panel/categories", color: "text-success" },
-    { icon: Verified, label: "KYC", path: "/admin-panel/kyc", color: "text-blue-600" },
+    { icon: Verified, label: "Seller KYC", path: "/admin-panel/kyc", color: "text-blue-600" },
+    { icon: Truck, label: "Driver KYC", path: "/admin-panel/driver-kyc", color: "text-orange-600" },
     { icon: Send, label: "Send Notifs", path: "/admin-panel/send-notifications", color: "text-purple-600" },
-    { icon: Activity, label: "Activity", path: "/admin-panel/activity-logs", color: "text-orange-600" },
     { icon: Settings, label: "Settings", path: "/admin-panel/settings", color: "text-muted-foreground" },
   ];
 
@@ -78,6 +78,7 @@ const AdminDashboard = () => {
     { icon: ShoppingCart, label: "Manage Orders", path: "/admin-panel/orders" },
     { icon: Tag, label: "Manage Categories", path: "/admin-panel/categories" },
     { icon: Verified, label: "Verify Seller KYC", path: "/admin-panel/kyc" },
+    { icon: Truck, label: "Verify Driver KYC", path: "/admin-panel/driver-kyc" },
     { icon: Send, label: "Send User Notifications", path: "/admin-panel/send-notifications" },
     { icon: Activity, label: "View User Activity Logs", path: "/admin-panel/activity-logs" },
     { icon: AlertTriangle, label: "Reports & Moderation", path: "/admin-panel/reports" },
