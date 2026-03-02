@@ -9,6 +9,8 @@ import CustomerServiceBot from "@/components/CustomerServiceBot";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import AdminAuth from "./pages/AdminAuth";
+import DriverAuth from "./pages/DriverAuth";
 import ResetPassword from "./pages/ResetPassword";
 import Categories from "./pages/Categories";
 import Cart from "./pages/Cart";
@@ -45,6 +47,7 @@ import AdminKYC from "./pages/admin/AdminKYC";
 import AdminDriverKYC from "./pages/admin/AdminDriverKYC";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,7 +62,10 @@ const App = () => (
           <BrowserRouter>
             <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/admin" element={<AdminAuth />} />
+            <Route path="/driver-auth" element={<DriverAuth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/faq" element={<FAQ />} />
             {/* Admin routes - separate from buyer/seller layout */}
             <Route path="/admin-panel" element={<AdminDashboard />} />
             <Route path="/admin-panel/users" element={<AdminUsers />} />
