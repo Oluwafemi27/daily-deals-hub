@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Upload, X, Loader } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { uploadToCloudinary, validateImageFile } from "@/lib/cloudinary";
 
 const AddProduct = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -23,7 +25,7 @@ const AddProduct = () => {
     stock: "0",
     category_id: "",
     status: "draft" as "draft" | "active",
-    images: "",
+    images: [] as string[],
   });
 
   const { data: categories = [] } = useQuery({
@@ -34,12 +36,57 @@ const AddProduct = () => {
     },
   });
 
+  const handleImageUpload = async (file: File) => {
+    try {
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        toast({
+          title: "Validation Error",
+          description: validationError,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setUploadingImage(true);
+      const imageUrl = await uploadToCloudinary(file);
+      setForm(prev => ({
+        ...prev,
+        images: [...prev.images, imageUrl]
+      }));
+      toast({ title: "Success", description: "Image uploaded successfully" });
+    } catch (error: any) {
+      toast({
+        title: "Upload Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setForm(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    setLoading(true);
 
-    const images = form.images.split(",").map((s) => s.trim()).filter(Boolean);
+    if (!form.title || !form.price || form.images.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields and upload at least one image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading(true);
 
     const { error } = await supabase.from("products").insert({
       seller_id: user.id,
@@ -50,7 +97,7 @@ const AddProduct = () => {
       stock: parseInt(form.stock),
       category_id: form.category_id || null,
       status: form.status,
-      images,
+      images: form.images,
     });
 
     setLoading(false);
@@ -115,8 +162,57 @@ const AddProduct = () => {
           </Select>
         </div>
         <div className="space-y-2">
-          <Label>Image URLs (comma-separated)</Label>
-          <Input value={form.images} onChange={(e) => setForm({ ...form, images: e.target.value })} placeholder="https://..." />
+          <Label>Product Images *</Label>
+          <div className="space-y-3">
+            {form.images.length > 0 && (
+              <div className="grid grid-cols-2 gap-2">
+                {form.images.map((imageUrl, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={imageUrl}
+                      alt={`Product ${index + 1}`}
+                      className="h-24 w-full object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => document.getElementById("product-images")?.click()}
+              disabled={uploadingImage}
+              className="w-full border-2 border-dashed border-input rounded-lg p-6 text-center hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploadingImage ? (
+                <Loader className="h-8 w-8 mx-auto mb-2 text-muted-foreground animate-spin" />
+              ) : (
+                <>
+                  <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                  <p className="text-sm font-medium">Click to upload images</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB each</p>
+                </>
+              )}
+            </button>
+            <input
+              id="product-images"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploadingImage}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleImageUpload(file);
+                e.target.value = "";
+              }}
+            />
+          </div>
         </div>
         <Button type="submit" className="w-full font-semibold" size="lg" disabled={loading}>
           {loading ? "Creating..." : "Create Product"}

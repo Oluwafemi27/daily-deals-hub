@@ -26,10 +26,7 @@ const SellerDeliveryDrivers = () => {
     queryFn: async () => {
       let query = supabase
         .from("driver_profiles")
-        .select(`
-          *,
-          profile:auth.users!driver_profiles_driver_id_fkey(display_name)
-        `)
+        .select("*")
         .eq("is_available", true)
         .eq("kyc_status", "approved");
 
@@ -42,7 +39,10 @@ const SellerDeliveryDrivers = () => {
         query = query.order("total_deliveries", { ascending: false });
       }
 
-      const { data } = await query;
+      const { data, error } = await query;
+      if (error) {
+        console.error("Error fetching drivers:", error);
+      }
       return data || [];
     },
   });
@@ -53,10 +53,7 @@ const SellerDeliveryDrivers = () => {
       if (!user) return [];
       const { data } = await supabase
         .from("delivery_jobs")
-        .select(`
-          *,
-          driver:driver_profiles(*)
-        `)
+        .select("*")
         .eq("seller_id", user.id)
         .in("status", ["pending", "accepted", "in_transit"])
         .order("created_at", { ascending: false });
@@ -119,8 +116,8 @@ const SellerDeliveryDrivers = () => {
 
   // Filter drivers based on search
   const filteredDrivers = availableDrivers.filter((driver: any) =>
-    driver.profile?.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    driver.vehicle_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    driver.vehicle_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    driver.vehicle_type?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -207,7 +204,7 @@ const SellerDeliveryDrivers = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-semibold">
-                                {driver.profile?.display_name || "Driver"}
+                                {driver.vehicle_name || "Delivery Driver"}
                               </p>
                               {driver.kyc_status === "approved" && (
                                 <Check className="h-4 w-4 text-green-600" />
@@ -274,7 +271,7 @@ const SellerDeliveryDrivers = () => {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <p className="font-semibold">{job.driver?.profile?.display_name || "Driver"}</p>
+                          <p className="font-semibold">Driver Assignment</p>
                           <p className="text-xs text-muted-foreground">Order: {job.order_id.slice(0, 8)}...</p>
                         </div>
                         <Badge variant={
