@@ -1,5 +1,4 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, CheckCircle, Clock, XCircle, Camera } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
@@ -50,6 +49,13 @@ const SellerKYC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [cameraActive, setCameraActive] = useState(false);
+
+  // Clean up camera stream on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
 
   const { data: kycStatus } = useQuery({
     queryKey: ["seller-kyc", user?.id],
@@ -186,15 +192,53 @@ const SellerKYC = () => {
 
   const startCamera = async () => {
     try {
+      // Stop any existing camera stream first
+      stopCamera();
+
+      // Check if camera is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera not supported in this browser");
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "user" },
+        video: {
+          facingMode: "user",
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
       });
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setCameraActive(true);
       }
     } catch (error) {
-      toast.error("Failed to access camera. Please check permissions.");
+      console.error("Camera access error:", error);
+
+      let errorMessage = "Failed to access camera. Please check permissions.";
+
+      if (error instanceof DOMException) {
+        switch (error.name) {
+          case "NotAllowedError":
+            errorMessage = "Camera permission denied. Please allow camera access in your browser settings.";
+            break;
+          case "NotFoundError":
+            errorMessage = "No camera found. Please check that a camera is connected.";
+            break;
+          case "NotReadableError":
+            errorMessage = "Camera is in use by another application. Please close it and try again.";
+            break;
+          case "OverconstrainedError":
+            errorMessage = "Camera does not meet the required specifications.";
+            break;
+          default:
+            errorMessage = `Camera error: ${error.message}`;
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -202,6 +246,7 @@ const SellerKYC = () => {
     if (videoRef.current && videoRef.current.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
       tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject = null;
       setCameraActive(false);
     }
   };
@@ -410,22 +455,46 @@ const SellerKYC = () => {
                 {!formData.face_photo ? (
                   <div className="space-y-3">
                     {!cameraActive ? (
-                      <Button
-                        type="button"
-                        onClick={startCamera}
-                        variant="outline"
-                        className="w-full"
-                      >
-                        <Camera className="h-4 w-4 mr-2" />
-                        Start Camera & Capture Face
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          onClick={startCamera}
+                          variant="outline"
+                          className="w-full"
+                        >
+                          <Camera className="h-4 w-4 mr-2" />
+                          Start Camera & Capture Face
+                        </Button>
+                        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+                          <p className="font-medium mb-1">📸 Camera Requirements:</p>
+                          <ul className="text-xs space-y-1 ml-3 list-disc">
+                            <li>Make sure your browser has permission to access the camera</li>
+                            <li>Ensure good lighting and a clear view of your face</li>
+                            <li>Position camera at eye level, about 30cm away</li>
+                          </ul>
+                        </div>
+                        <details className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                          <summary className="font-medium text-amber-900 cursor-pointer text-sm">
+                            🔧 Troubleshooting: Camera not working?
+                          </summary>
+                          <ul className="text-xs text-amber-900 space-y-1 mt-2 ml-3 list-disc">
+                            <li>Check browser permissions: Settings → Privacy → Camera</li>
+                            <li>Make sure no other app is using the camera</li>
+                            <li>Try refreshing the page and allowing camera access again</li>
+                            <li>Use a different browser if the issue persists</li>
+                            <li>Check that your device has a working camera</li>
+                          </ul>
+                        </details>
+                      </>
                     ) : (
                       <div className="space-y-3">
                         <video
                           ref={videoRef}
                           autoPlay
                           playsInline
+                          muted
                           className="w-full rounded-lg bg-black"
+                          style={{ transform: "scaleX(-1)" }}
                         />
                         <div className="flex gap-2">
                           <Button

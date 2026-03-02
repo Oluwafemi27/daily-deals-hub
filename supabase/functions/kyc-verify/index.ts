@@ -66,22 +66,38 @@ serve(async (req) => {
   forwardForm.set("idDocument", idDocument, idDocument.name);
   forwardForm.set("selfie", selfie, selfie.name);
 
-  const resp = await fetch(verifyUrl, {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-    },
-    body: forwardForm,
-  });
+  try {
+    const resp = await fetch(verifyUrl, {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+      },
+      body: forwardForm,
+    });
 
-  const respContentType = resp.headers.get("content-type") ?? "application/json";
-  const body = await resp.text();
+    const respContentType = resp.headers.get("content-type") ?? "application/json";
+    const body = await resp.text();
 
-  return new Response(body, {
-    status: resp.status,
-    headers: {
-      ...corsHeaders,
-      "Content-Type": respContentType,
-    },
-  });
+    return new Response(body, {
+      status: resp.status,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": respContentType,
+      },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("KYC verification proxy error:", errorMessage);
+
+    return new Response(JSON.stringify({
+      error: "KYC verification service error",
+      details: errorMessage,
+    }), {
+      status: 502,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "application/json",
+      },
+    });
+  }
 });

@@ -20,12 +20,13 @@ const SellerProducts = () => {
   const { data: products = [] } = useQuery({
     queryKey: ["seller-products", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("seller_id", user!.id)
         .neq("status", "deleted")
         .order("created_at", { ascending: false });
+      if (error) throw error;
       return data ?? [];
     },
     enabled: !!user,
@@ -33,11 +34,15 @@ const SellerProducts = () => {
 
   const deleteProduct = useMutation({
     mutationFn: async (id: string) => {
-      await supabase.from("products").update({ status: "deleted" as any }).eq("id", id);
+      const { error } = await supabase.from("products").update({ status: "deleted" as any }).eq("id", id);
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["seller-products"] });
       toast({ title: "Product deleted" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Failed to delete product", description: error.message, variant: "destructive" });
     },
   });
 
