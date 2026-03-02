@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   TrendingUp, Wallet, MapPin, FileCheck, MessageCircle,
   Bell, Settings, User, Truck, ChevronRight, MapPinCheck, Clock
@@ -50,6 +51,23 @@ const DriverDashboard = () => {
     enabled: !!user && isDriver,
   });
 
+  // Unread notifications count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ["unread-notifications-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+    refetchInterval: 5000,
+  });
+
   if (!isDriver) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -81,8 +99,13 @@ const DriverDashboard = () => {
             </h1>
           </div>
           <div className="flex gap-2">
-            <Link to="/notifications" className="text-primary-foreground">
+            <Link to="/notifications" className="relative text-primary-foreground">
               <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive text-white">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </Badge>
+              )}
             </Link>
             <Link to="/messages" className="text-primary-foreground">
               <MessageCircle className="h-5 w-5" />

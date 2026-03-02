@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, FileCheck, Upload, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileCheck, Upload, CheckCircle, AlertCircle, Loader } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { uploadToCloudinary, validateImageFile } from "@/lib/cloudinary";
 
 const DriverKYC = () => {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ const DriverKYC = () => {
   const [vehicleRegistrationUrl, setVehicleRegistrationUrl] = useState("");
   const [insuranceCertificateUrl, setInsuranceCertificateUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const { data: kycData } = useQuery({
     queryKey: ["driver-kyc", user?.id],
@@ -51,42 +53,48 @@ const DriverKYC = () => {
   });
 
   const handleUploadImage = async (file: File, field: string) => {
-    if (!user) return;
-    
     try {
-      const fileName = `kyc/${user.id}/${field}-${Date.now()}`;
-      const { data, error } = await supabase.storage
-        .from("kyc-documents")
-        .upload(fileName, file);
+      // Validate file
+      const validationError = validateImageFile(file);
+      if (validationError) {
+        toast({
+          title: "Validation Error",
+          description: validationError,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      if (error) throw error;
+      setUploadingField(field);
 
-      const { data: { publicUrl } } = supabase.storage
-        .from("kyc-documents")
-        .getPublicUrl(data.path);
+      // Upload to Cloudinary
+      const imageUrl = await uploadToCloudinary(file);
 
+      // Set the URL based on field
       switch (field) {
         case "id_image":
-          setIdImageUrl(publicUrl);
+          setIdImageUrl(imageUrl);
           break;
         case "proof_of_address":
-          setProofOfAddressUrl(publicUrl);
+          setProofOfAddressUrl(imageUrl);
           break;
         case "vehicle_registration":
-          setVehicleRegistrationUrl(publicUrl);
+          setVehicleRegistrationUrl(imageUrl);
           break;
         case "insurance_certificate":
-          setInsuranceCertificateUrl(publicUrl);
+          setInsuranceCertificateUrl(imageUrl);
           break;
       }
 
       toast({ title: "Success", description: "Image uploaded successfully" });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Upload Error",
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setUploadingField(null);
     }
   };
 
@@ -158,7 +166,7 @@ const DriverKYC = () => {
     }
   };
 
-  const renderImageUpload = (field: string, label: string, imageUrl: string, setUrl: Function) => (
+  const renderImageUpload = (field: string, label: string, imageUrl: string) => (
     <div>
       <label className="text-sm font-medium mb-2 block">{label}</label>
       {imageUrl ? (
@@ -169,18 +177,27 @@ const DriverKYC = () => {
             size="sm"
             className="mt-2"
             onClick={() => document.getElementById(field)?.click()}
+            disabled={uploadingField === field}
           >
             Change
           </Button>
         </div>
       ) : (
         <button
+          type="button"
           onClick={() => document.getElementById(field)?.click()}
-          className="w-full border-2 border-dashed border-input rounded-lg p-6 text-center hover:bg-muted transition-colors"
+          disabled={uploadingField !== null}
+          className="w-full border-2 border-dashed border-input rounded-lg p-6 text-center hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-          <p className="text-sm font-medium">Click to upload</p>
-          <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+          {uploadingField === field ? (
+            <Loader className="h-8 w-8 mx-auto mb-2 text-muted-foreground animate-spin" />
+          ) : (
+            <>
+              <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+              <p className="text-sm font-medium">Click to upload</p>
+              <p className="text-xs text-muted-foreground">PNG, JPG up to 5MB</p>
+            </>
+          )}
         </button>
       )}
       <input
@@ -188,6 +205,7 @@ const DriverKYC = () => {
         type="file"
         accept="image/*"
         className="hidden"
+        disabled={uploadingField !== null}
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) handleUploadImage(file, field);
@@ -309,8 +327,8 @@ const DriverKYC = () => {
               />
             </div>
             <div className="grid grid-cols-1 gap-3">
-              {renderImageUpload("id_image", "ID Image", idImageUrl, setIdImageUrl)}
-              {renderImageUpload("proof_of_address", "Proof of Address", proofOfAddressUrl, setProofOfAddressUrl)}
+              {renderImageUpload("id_image", "ID Image", idImageUrl)}
+              {renderImageUpload("proof_of_address", "Proof of Address", proofOfAddressUrl)}
             </div>
           </CardContent>
         </Card>
@@ -322,8 +340,8 @@ const DriverKYC = () => {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 gap-3">
-              {renderImageUpload("vehicle_registration", "Vehicle Registration", vehicleRegistrationUrl, setVehicleRegistrationUrl)}
-              {renderImageUpload("insurance_certificate", "Insurance Certificate", insuranceCertificateUrl, setInsuranceCertificateUrl)}
+              {renderImageUpload("vehicle_registration", "Vehicle Registration", vehicleRegistrationUrl)}
+              {renderImageUpload("insurance_certificate", "Insurance Certificate", insuranceCertificateUrl)}
             </div>
           </CardContent>
         </Card>
