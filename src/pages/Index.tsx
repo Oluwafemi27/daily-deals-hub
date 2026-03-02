@@ -63,6 +63,23 @@ const Index = () => {
     enabled: !!user,
   });
 
+  // Unread notifications count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ["unread-notifications-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
+  });
+
   return (
     <div className="min-h-screen bg-background pb-4">
       {/* Header */}
@@ -78,6 +95,11 @@ const Index = () => {
           </div>
           <Link to="/notifications" className="relative text-primary-foreground">
             <Bell className="h-6 w-6" />
+            {notificationCount > 0 && (
+              <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive text-white">
+                {notificationCount > 99 ? "99+" : notificationCount}
+              </Badge>
+            )}
           </Link>
           <Link to="/messages" className="relative text-primary-foreground">
             <MessageCircle className="h-6 w-6" />
@@ -104,9 +126,14 @@ const Index = () => {
             <Heart className="h-5 w-5 text-destructive" />
             <span className="text-[10px] font-medium">Wishlist</span>
           </Link>
-          <Link to="/notifications" className="flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
+          <Link to="/notifications" className="relative flex flex-col items-center gap-1 rounded-xl bg-card p-3 shadow-sm">
             <Bell className="h-5 w-5 text-accent" />
             <span className="text-[10px] font-medium">Alerts</span>
+            {notificationCount > 0 && (
+              <Badge className="absolute -right-1 -top-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive text-white">
+                {notificationCount > 99 ? "99+" : notificationCount}
+              </Badge>
+            )}
           </Link>
         </div>
       )}
