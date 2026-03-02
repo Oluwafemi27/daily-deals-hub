@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowLeft, Truck, Toggle2 } from "lucide-react";
+import { ArrowLeft, Truck, Power } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,7 +132,7 @@ const DriverProfile = () => {
               onClick={toggleAvailability}
               className={isAvailable ? "border-green-500 text-green-600" : "border-red-500 text-red-600"}
             >
-              <Toggle2 className="h-4 w-4 mr-2" />
+              <Power className="h-4 w-4 mr-2" />
               {isAvailable ? "Online" : "Offline"}
             </Button>
           </CardContent>
