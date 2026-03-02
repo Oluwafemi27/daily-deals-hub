@@ -27,7 +27,8 @@ const Index = () => {
   const { data: categories = [], isLoading: catLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data } = await supabase.from("product_categories").select("*").order("sort_order");
+      const { data, error } = await supabase.from("product_categories").select("*").order("sort_order");
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -35,12 +36,13 @@ const Index = () => {
   const { data: products = [], isLoading: prodLoading } = useQuery({
     queryKey: ["featured-products"],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("products")
         .select("*")
         .eq("status", "active")
         .order("sales_count", { ascending: false })
         .limit(20);
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -50,11 +52,12 @@ const Index = () => {
     queryKey: ["buyer-spending", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("orders")
         .select("total")
         .eq("buyer_id", user.id)
         .in("status", ["processing", "shipped", "delivered"]);
+      if (error) throw error;
       return (data ?? []).reduce((sum: number, o: any) => sum + Number(o.total), 0);
     },
     enabled: !!user,
