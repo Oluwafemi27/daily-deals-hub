@@ -48,6 +48,7 @@ import AdminDriverKYC from "./pages/admin/AdminDriverKYC";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminActivityLogs from "./pages/admin/AdminActivityLogs";
 import FAQ from "./pages/FAQ";
+import GetStarted from "./pages/GetStarted";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -61,6 +62,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
+            <Route path="/get-started" element={<GetStarted />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/admin" element={<AdminAuth />} />
             <Route path="/driver-auth" element={<DriverAuth />} />

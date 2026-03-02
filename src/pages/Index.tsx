@@ -72,12 +72,12 @@ const Index = () => {
         .from("notifications")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
-        .eq("read", false);
+        .eq("is_read", false);
       if (error) throw error;
       return count ?? 0;
     },
     enabled: !!user,
-    refetchInterval: 10000, // Refetch every 10 seconds to keep count updated
+    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
   });
 
   return (

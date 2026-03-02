@@ -69,13 +69,13 @@ const Footer = () => {
             <h4 className="font-semibold text-foreground">For Sellers & Drivers</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="/auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  Become a Seller
+                <a href="/auth?mode=seller" className="text-muted-foreground hover:text-primary transition-colors font-medium">
+                  → Become a Seller
                 </a>
               </li>
               <li>
-                <a href="/driver-auth" className="text-muted-foreground hover:text-primary transition-colors">
-                  Become a Driver
+                <a href="/driver-auth" className="text-muted-foreground hover:text-primary transition-colors font-medium text-orange-600">
+                  → Join as Driver
                 </a>
               </li>
               <li>

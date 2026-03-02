@@ -29,7 +29,10 @@ const Notifications = () => {
     mutationFn: async (id: string) => {
       await supabase.from("notifications").update({ is_read: true }).eq("id", id);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications-count"] });
+    },
   });
 
   const markAllRead = useMutation({
@@ -37,7 +40,10 @@ const Notifications = () => {
       if (!user) return;
       await supabase.from("notifications").update({ is_read: true }).eq("user_id", user.id).eq("is_read", false);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications-count"] });
+    },
   });
 
   if (!user) {
