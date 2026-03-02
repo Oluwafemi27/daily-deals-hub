@@ -4,9 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Package, DollarSign, ShoppingCart, Plus, TrendingUp, Wallet, MessageCircle,
-  Bell, Settings, User, Store, Filter, ChevronRight, Verified
+  Bell, Settings, User, Store, Filter, ChevronRight, Verified, Truck
 } from "lucide-react";
 import BannerSlideshow from "@/components/BannerSlideshow";
 
@@ -48,6 +49,23 @@ const SellerDashboard = () => {
     enabled: !!user && isSeller,
   });
 
+  // Unread notifications count
+  const { data: notificationCount = 0 } = useQuery({
+    queryKey: ["unread-notifications-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count, error } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_read", false);
+      if (error) throw error;
+      return count ?? 0;
+    },
+    enabled: !!user,
+    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
+  });
+
   if (!isSeller) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
@@ -61,10 +79,10 @@ const SellerDashboard = () => {
     { icon: Plus, label: "Add Product", path: "/seller/products/new", color: "text-success" },
     { icon: ShoppingCart, label: "Orders", path: "/seller/orders", color: "text-secondary" },
     { icon: Verified, label: "KYC", path: "/seller/kyc", color: "text-blue-600" },
+    { icon: Truck, label: "Delivery Drivers", path: "/seller/delivery-drivers", color: "text-orange-500" },
     { icon: Wallet, label: "Wallet", path: "/seller/wallet", color: "text-accent" },
     { icon: MessageCircle, label: "Messages", path: "/messages", color: "text-primary" },
     { icon: Bell, label: "Notifications", path: "/notifications", color: "text-destructive" },
-    { icon: Store, label: "Store Profile", path: "/seller/profile", color: "text-secondary" },
   ];
 
   return (
@@ -79,8 +97,13 @@ const SellerDashboard = () => {
             </h1>
           </div>
           <div className="flex gap-2">
-            <Link to="/notifications" className="text-primary-foreground">
+            <Link to="/notifications" className="relative text-primary-foreground">
               <Bell className="h-5 w-5" />
+              {notificationCount > 0 && (
+                <Badge className="absolute -right-2 -top-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-destructive text-white">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </Badge>
+              )}
             </Link>
             <Link to="/messages" className="text-primary-foreground">
               <MessageCircle className="h-5 w-5" />

@@ -58,8 +58,18 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const LoadingFallback = () => (
   <div className="flex items-center justify-center min-h-screen">
     <div className="text-center">
-      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-      <p className="text-muted-foreground">Loading...</p>
+      <div className="w-6 h-6 border-3 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
+      <p className="text-xs text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
+
+// Minimal loading fallback for nested routes
+const PageLoadingFallback = () => (
+  <div className="flex items-center justify-center p-8">
+    <div className="text-center">
+      <div className="w-5 h-5 border-2 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-2"></div>
+      <p className="text-xs text-muted-foreground">Loading...</p>
     </div>
   </div>
 );
@@ -74,61 +84,63 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/get-started" element={<GetStarted />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/admin" element={<AdminAuth />} />
-                <Route path="/driver-auth" element={<DriverAuth />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/faq" element={<FAQ />} />
-                {/* Admin routes - separate from buyer/seller layout */}
-                <Route path="/admin-panel" element={<AdminDashboard />} />
-                <Route path="/admin-panel/users" element={<AdminUsers />} />
-                <Route path="/admin-panel/products" element={<AdminProducts />} />
-                <Route path="/admin-panel/orders" element={<AdminOrders />} />
-                <Route path="/admin-panel/categories" element={<AdminCategories />} />
-                <Route path="/admin-panel/analytics" element={<AdminAnalytics />} />
-                <Route path="/admin-panel/reports" element={<AdminReports />} />
-                <Route path="/admin-panel/kyc" element={<AdminKYC />} />
-                <Route path="/admin-panel/driver-kyc" element={<AdminDriverKYC />} />
-                <Route path="/admin-panel/send-notifications" element={<AdminNotifications />} />
-                <Route path="/admin-panel/activity-logs" element={<AdminActivityLogs />} />
-                <Route path="/admin-panel/notifications" element={<Notifications />} />
-                <Route path="/admin-panel/messages" element={<Messages />} />
-                <Route path="/admin-panel/settings" element={<Settings />} />
-                {/* Main app layout for buyers & sellers */}
-                <Route element={<AppLayout />}>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/categories" element={<Categories />} />
-                  <Route path="/categories/:id" element={<Categories />} />
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/wishlist" element={<Wishlist />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/product/:id" element={<ProductDetail />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/notifications" element={<Notifications />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/addresses" element={<Addresses />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/seller" element={<SellerDashboard />} />
-                  <Route path="/seller/products" element={<SellerProducts />} />
-                  <Route path="/seller/products/new" element={<AddProduct />} />
-                  <Route path="/seller/wallet" element={<SellerWallet />} />
-                  <Route path="/seller/orders" element={<SellerOrders />} />
-                  <Route path="/seller/delivery-drivers" element={<SellerDeliveryDrivers />} />
-                  <Route path="/seller/profile" element={<SellerProfile />} />
-                  <Route path="/seller/kyc" element={<SellerKYC />} />
-                  <Route path="/driver" element={<DriverDashboard />} />
-                  <Route path="/driver/jobs" element={<DriverJobs />} />
-                  <Route path="/driver/profile" element={<DriverProfile />} />
-                  <Route path="/driver/kyc" element={<DriverKYC />} />
-                  <Route path="/driver/wallet" element={<DriverWallet />} />
-                  <Route path="/driver/settings" element={<DriverSettings />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
+            <Routes>
+              {/* Auth routes */}
+              <Route path="/get-started" element={<Suspense fallback={<LoadingFallback />}><GetStarted /></Suspense>} />
+              <Route path="/auth" element={<Suspense fallback={<LoadingFallback />}><Auth /></Suspense>} />
+              <Route path="/admin" element={<Suspense fallback={<LoadingFallback />}><AdminAuth /></Suspense>} />
+              <Route path="/driver-auth" element={<Suspense fallback={<LoadingFallback />}><DriverAuth /></Suspense>} />
+              <Route path="/reset-password" element={<Suspense fallback={<LoadingFallback />}><ResetPassword /></Suspense>} />
+              <Route path="/faq" element={<Suspense fallback={<PageLoadingFallback />}><FAQ /></Suspense>} />
+
+              {/* Admin routes - separate from buyer/seller layout */}
+              <Route path="/admin-panel" element={<Suspense fallback={<LoadingFallback />}><AdminDashboard /></Suspense>} />
+              <Route path="/admin-panel/users" element={<Suspense fallback={<PageLoadingFallback />}><AdminUsers /></Suspense>} />
+              <Route path="/admin-panel/products" element={<Suspense fallback={<PageLoadingFallback />}><AdminProducts /></Suspense>} />
+              <Route path="/admin-panel/orders" element={<Suspense fallback={<PageLoadingFallback />}><AdminOrders /></Suspense>} />
+              <Route path="/admin-panel/categories" element={<Suspense fallback={<PageLoadingFallback />}><AdminCategories /></Suspense>} />
+              <Route path="/admin-panel/analytics" element={<Suspense fallback={<PageLoadingFallback />}><AdminAnalytics /></Suspense>} />
+              <Route path="/admin-panel/reports" element={<Suspense fallback={<PageLoadingFallback />}><AdminReports /></Suspense>} />
+              <Route path="/admin-panel/kyc" element={<Suspense fallback={<PageLoadingFallback />}><AdminKYC /></Suspense>} />
+              <Route path="/admin-panel/driver-kyc" element={<Suspense fallback={<PageLoadingFallback />}><AdminDriverKYC /></Suspense>} />
+              <Route path="/admin-panel/send-notifications" element={<Suspense fallback={<PageLoadingFallback />}><AdminNotifications /></Suspense>} />
+              <Route path="/admin-panel/activity-logs" element={<Suspense fallback={<PageLoadingFallback />}><AdminActivityLogs /></Suspense>} />
+              <Route path="/admin-panel/notifications" element={<Suspense fallback={<PageLoadingFallback />}><Notifications /></Suspense>} />
+              <Route path="/admin-panel/messages" element={<Suspense fallback={<PageLoadingFallback />}><Messages /></Suspense>} />
+              <Route path="/admin-panel/settings" element={<Suspense fallback={<PageLoadingFallback />}><Settings /></Suspense>} />
+
+              {/* Main app layout for buyers & sellers */}
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Suspense fallback={<PageLoadingFallback />}><Index /></Suspense>} />
+                <Route path="/categories" element={<Suspense fallback={<PageLoadingFallback />}><Categories /></Suspense>} />
+                <Route path="/categories/:id" element={<Suspense fallback={<PageLoadingFallback />}><Categories /></Suspense>} />
+                <Route path="/cart" element={<Suspense fallback={<PageLoadingFallback />}><Cart /></Suspense>} />
+                <Route path="/wishlist" element={<Suspense fallback={<PageLoadingFallback />}><Wishlist /></Suspense>} />
+                <Route path="/profile" element={<Suspense fallback={<PageLoadingFallback />}><Profile /></Suspense>} />
+                <Route path="/product/:id" element={<Suspense fallback={<PageLoadingFallback />}><ProductDetail /></Suspense>} />
+                <Route path="/messages" element={<Suspense fallback={<PageLoadingFallback />}><Messages /></Suspense>} />
+                <Route path="/notifications" element={<Suspense fallback={<PageLoadingFallback />}><Notifications /></Suspense>} />
+                <Route path="/orders" element={<Suspense fallback={<PageLoadingFallback />}><Orders /></Suspense>} />
+                <Route path="/addresses" element={<Suspense fallback={<PageLoadingFallback />}><Addresses /></Suspense>} />
+                <Route path="/settings" element={<Suspense fallback={<PageLoadingFallback />}><Settings /></Suspense>} />
+                <Route path="/seller" element={<Suspense fallback={<PageLoadingFallback />}><SellerDashboard /></Suspense>} />
+                <Route path="/seller/products" element={<Suspense fallback={<PageLoadingFallback />}><SellerProducts /></Suspense>} />
+                <Route path="/seller/products/new" element={<Suspense fallback={<PageLoadingFallback />}><AddProduct /></Suspense>} />
+                <Route path="/seller/wallet" element={<Suspense fallback={<PageLoadingFallback />}><SellerWallet /></Suspense>} />
+                <Route path="/seller/orders" element={<Suspense fallback={<PageLoadingFallback />}><SellerOrders /></Suspense>} />
+                <Route path="/seller/delivery-drivers" element={<Suspense fallback={<PageLoadingFallback />}><SellerDeliveryDrivers /></Suspense>} />
+                <Route path="/seller/profile" element={<Suspense fallback={<PageLoadingFallback />}><SellerProfile /></Suspense>} />
+                <Route path="/seller/kyc" element={<Suspense fallback={<PageLoadingFallback />}><SellerKYC /></Suspense>} />
+                <Route path="/driver" element={<Suspense fallback={<PageLoadingFallback />}><DriverDashboard /></Suspense>} />
+                <Route path="/driver/jobs" element={<Suspense fallback={<PageLoadingFallback />}><DriverJobs /></Suspense>} />
+                <Route path="/driver/profile" element={<Suspense fallback={<PageLoadingFallback />}><DriverProfile /></Suspense>} />
+                <Route path="/driver/kyc" element={<Suspense fallback={<PageLoadingFallback />}><DriverKYC /></Suspense>} />
+                <Route path="/driver/wallet" element={<Suspense fallback={<PageLoadingFallback />}><DriverWallet /></Suspense>} />
+                <Route path="/driver/settings" element={<Suspense fallback={<PageLoadingFallback />}><DriverSettings /></Suspense>} />
+              </Route>
+
+              <Route path="*" element={<Suspense fallback={<LoadingFallback />}><NotFound /></Suspense>} />
+            </Routes>
             <CustomerServiceBot />
           </BrowserRouter>
         </TooltipProvider>
