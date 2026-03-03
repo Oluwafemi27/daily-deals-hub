@@ -18,8 +18,20 @@ const buyerBanners = [
 ];
 
 const Index = () => {
-  const { user, roles } = useAuth();
+  const { user, roles, loading } = useAuth();
   const isSeller = roles.includes("seller") && !roles.includes("buyer");
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // If pure seller (not also a buyer), redirect to seller dashboard
   if (isSeller) return <Navigate to="/seller" replace />;

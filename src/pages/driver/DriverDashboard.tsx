@@ -18,7 +18,7 @@ const driverBanners = [
 ];
 
 const DriverDashboard = () => {
-  const { user, roles, profile } = useAuth();
+  const { user, roles, profile, loading } = useAuth();
   const navigate = useNavigate();
   const isDriver = roles.includes("driver");
 
@@ -68,10 +68,28 @@ const DriverDashboard = () => {
     refetchInterval: 5000,
   });
 
-  if (!isDriver) {
+  // Show loading state while auth is loading
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <p className="text-muted-foreground">You need a driver account to access this page.</p>
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading driver profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !isDriver) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground font-medium mb-4">Access Denied</p>
+          <p className="text-sm text-muted-foreground mb-4">You need a driver account to access this page.</p>
+          <Button onClick={() => navigate("/driver-auth")} className="mt-2">
+            Login as Driver
+          </Button>
+        </div>
       </div>
     );
   }

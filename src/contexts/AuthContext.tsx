@@ -70,19 +70,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          // Fetch user data without blocking - use a short timeout to avoid hanging
-          const fetchTimeout = setTimeout(() => {
-            if (!isMounted) return;
-            fetchUserData(session.user.id).catch(err => {
-              console.error("Error fetching user data:", err);
-            });
-          }, 50);
-          return () => clearTimeout(fetchTimeout);
+          // Fetch user data and wait for it to complete
+          try {
+            await fetchUserData(session.user.id);
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          }
         } else {
           setRoles([]);
           setProfile(null);
         }
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
 
@@ -91,22 +91,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (isMounted) {
         setLoading(false);
       }
-    }, 3000);
+    }, 5000);
 
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
 
-        clearTimeout(sessionCheckTimeout);
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Non-blocking user data fetch
-          fetchUserData(session.user.id).catch(err => {
+          // Wait for user data to be fetched
+          try {
+            await fetchUserData(session.user.id);
+          } catch (err) {
             console.error("Error fetching user data:", err);
-          });
+          }
         }
       } catch (error) {
         console.error("Failed to load session:", error);
