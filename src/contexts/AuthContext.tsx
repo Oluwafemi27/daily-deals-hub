@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let sessionCheckTimeout: NodeJS.Timeout;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -69,7 +70,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
+          // Fetch user data without blocking - use a short timeout to avoid hanging
+          const fetchTimeout = setTimeout(() => {
+            if (!isMounted) return;
+            fetchUserData(session.user.id).catch(err => {
+              console.error("Error fetching user data:", err);
+            });
+          }, 50);
+          return () => clearTimeout(fetchTimeout);
         } else {
           setRoles([]);
           setProfile(null);
@@ -78,14 +86,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     );
 
+    // Set a timeout to ensure loading completes even if Supabase is slow
+    sessionCheckTimeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 3000);
+
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
+
+        clearTimeout(sessionCheckTimeout);
         setSession(session);
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          await fetchUserData(session.user.id);
+          // Non-blocking user data fetch
+          fetchUserData(session.user.id).catch(err => {
+            console.error("Error fetching user data:", err);
+          });
         }
       } catch (error) {
         console.error("Failed to load session:", error);
@@ -96,6 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null);
       } finally {
         if (isMounted) {
+          clearTimeout(sessionCheckTimeout);
           setLoading(false);
         }
       }
@@ -103,6 +125,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       isMounted = false;
+      clearTimeout(sessionCheckTimeout);
       subscription.unsubscribe();
     };
   }, []);
