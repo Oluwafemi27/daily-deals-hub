@@ -34,7 +34,7 @@ const SellerDeliveryDrivers = () => {
       if (sortBy === "rating") {
         query = query.order("average_rating", { ascending: false });
       } else if (sortBy === "price") {
-        query = query.order("price_per_km", { ascending: true });
+        query = query.order("price_per_mile", { ascending: true });
       } else {
         query = query.order("total_deliveries", { ascending: false });
       }
@@ -91,7 +91,7 @@ const SellerDeliveryDrivers = () => {
           driver_id: selectedDriver,
           seller_id: user.id,
           status: "accepted",
-          price: selectedDriverData?.price_per_km || 5,
+          price: selectedDriverData?.price_per_mile || selectedDriverData?.price_per_km || 5,
         });
 
       if (error) throw error;
@@ -228,7 +228,8 @@ const SellerDeliveryDrivers = () => {
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <DollarSign className="h-3 w-3 text-green-500" />
-                                  <span className="font-medium">${driver.price_per_km}/km</span>
+                                  <span className="font-medium">${driver.price_per_mile}/mi</span>
+                                  <span className="text-[10px] text-muted-foreground ml-1">(${driver.price_per_km}/km)</span>
                                 </div>
                               </div>
                             </div>
