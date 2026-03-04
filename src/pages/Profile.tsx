@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  User, Package, MapPin, CreditCard, Settings, LogOut, Store, Shield, ChevronRight, MessageCircle, Bell, DollarSign
+  User, Package, MapPin, CreditCard, Settings, LogOut, Store, Shield, ChevronRight, MessageCircle, Bell, DollarSign, Truck
 } from "lucide-react";
 
 const Profile = () => {
@@ -20,6 +20,7 @@ const Profile = () => {
   }
 
   const isSeller = roles.includes("seller");
+  const isDriver = roles.includes("driver");
   const isAdmin = roles.includes("admin");
 
   const menuItems = [
@@ -30,6 +31,11 @@ const Profile = () => {
     ...(isSeller ? [
       { icon: Store, label: "Seller Dashboard", path: "/seller" },
       { icon: DollarSign, label: "Wallet", path: "/seller/wallet" },
+    ] : []),
+    ...(isDriver ? [
+      { icon: Truck, label: "Driver Dashboard", path: "/driver" },
+      { icon: MapPin, label: "Active Jobs", path: "/driver/jobs" },
+      { icon: DollarSign, label: "Wallet & Earnings", path: "/driver/wallet" },
     ] : []),
     ...(isAdmin ? [{ icon: Shield, label: "Admin Panel", path: "/admin-panel" }] : []),
     { icon: Settings, label: "Settings", path: "/settings" },
