@@ -56,28 +56,40 @@ class ErrorBoundary extends React.Component<Props, State> {
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-sm text-red-700">
-                We encountered an unexpected error. Please try refreshing the page.
+                We encountered an unexpected error. Please try one of the options below:
               </p>
               {process.env.NODE_ENV === "development" && this.state.error && (
                 <div className="p-3 bg-red-100 rounded-md border border-red-300">
                   <p className="font-mono text-xs text-red-900 whitespace-pre-wrap break-words">
                     {this.state.error.toString()}
                   </p>
+                  {this.state.errorInfo?.componentStack && (
+                    <p className="font-mono text-xs text-red-800 mt-2 whitespace-pre-wrap break-words">
+                      {this.state.errorInfo.componentStack}
+                    </p>
+                  )}
                 </div>
               )}
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <Button
                   onClick={this.handleReset}
                   variant="outline"
-                  className="flex-1"
+                  className="w-full"
                 >
                   Try Again
                 </Button>
                 <Button
                   onClick={() => window.location.href = "/"}
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="w-full bg-red-600 hover:bg-red-700"
                 >
                   Go Home
+                </Button>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Refresh Page
                 </Button>
               </div>
             </CardContent>

@@ -18,7 +18,7 @@ const adminBanners = [
 ];
 
 const AdminDashboard = () => {
-  const { roles } = useAuth();
+  const { roles, loading } = useAuth();
   const navigate = useNavigate();
   const isAdmin = roles.includes("admin");
 
@@ -42,6 +42,18 @@ const AdminDashboard = () => {
     },
     enabled: isAdmin,
   });
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading admin panel...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return (

@@ -18,7 +18,7 @@ const sellerBanners = [
 ];
 
 const SellerDashboard = () => {
-  const { user, roles, profile } = useAuth();
+  const { user, roles, profile, loading } = useAuth();
   const navigate = useNavigate();
   const isSeller = roles.includes("seller");
 
@@ -54,22 +54,50 @@ const SellerDashboard = () => {
     queryKey: ["unread-notifications-count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      if (error) throw error;
-      return count ?? 0;
+      try {
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false);
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          return 0;
+        }
+        return count ?? 0;
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return 0;
+      }
     },
     enabled: !!user,
-    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
+    refetchInterval: 30000, // Refetch every 30 seconds (reduced from 5000 for performance)
+    staleTime: 10000,
+    gcTime: 5 * 60 * 1000,
   });
 
-  if (!isSeller) {
+  // Show loading state while auth is loading
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <p className="text-muted-foreground">You need a seller account to access this page.</p>
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading seller profile...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !isSeller) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <p className="text-muted-foreground font-medium mb-4">Access Denied</p>
+          <p className="text-sm text-muted-foreground mb-4">You need a seller account to access this page.</p>
+          <Button onClick={() => navigate("/auth")} className="mt-2">
+            Login as Seller
+          </Button>
+        </div>
       </div>
     );
   }

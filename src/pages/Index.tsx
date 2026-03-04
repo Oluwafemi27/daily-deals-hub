@@ -18,12 +18,9 @@ const buyerBanners = [
 ];
 
 const Index = () => {
-  const { user, roles } = useAuth();
-  const isSeller = roles.includes("seller") && !roles.includes("buyer");
+  const { user, roles, loading } = useAuth();
 
-  // If pure seller (not also a buyer), redirect to seller dashboard
-  if (isSeller) return <Navigate to="/seller" replace />;
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const { data: categories = [], isLoading: catLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -68,17 +65,45 @@ const Index = () => {
     queryKey: ["unread-notifications-count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      if (error) throw error;
-      return count ?? 0;
+      try {
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false);
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          return 0;
+        }
+        return count ?? 0;
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return 0;
+      }
     },
     enabled: !!user,
-    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
+    refetchInterval: 30000, // Reduced from 5000 for better performance
+    staleTime: 10000,
+    gcTime: 5 * 60 * 1000,
   });
+
+  // NOW we can do conditional logic after all hooks are called
+  const isSeller = roles.includes("seller") && !roles.includes("buyer");
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If pure seller (not also a buyer), redirect to seller dashboard
+  if (isSeller) return <Navigate to="/seller" replace />;
 
   return (
     <div className="min-h-screen bg-background pb-4">

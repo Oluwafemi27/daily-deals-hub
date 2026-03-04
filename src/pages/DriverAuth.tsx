@@ -20,72 +20,223 @@ const DriverAuth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    
-    const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (authError) {
-      toast({ title: "Login failed", description: authError.message, variant: "destructive" });
-      setLoading(false);
+
+    // Validate inputs
+    if (!email || !password) {
+      toast({
+        title: "Validation error",
+        description: "Please enter both email and password",
+        variant: "destructive"
+      });
       return;
     }
 
-    // Check if user has driver role
-    if (user) {
-      const { data: userRoles, error: roleError } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "driver")
-        .single();
+    if (password.length < 6) {
+      toast({
+        title: "Validation error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
 
-      if (roleError || !userRoles) {
-        await supabase.auth.signOut();
+    setLoading(true);
+
+    try {
+      const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+      if (authError) {
+        console.error("Auth error:", authError);
         toast({
-          title: "Access denied",
-          description: "You don't have driver privileges.",
+          title: "Login failed",
+          description: authError.message,
           variant: "destructive"
         });
         setLoading(false);
         return;
       }
 
+      if (!user) {
+        toast({
+          title: "Login failed",
+          description: "Authentication failed. Please try again.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check if user has driver role - use maybeSingle() instead of single()
+      const { data: userRoles, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "driver")
+        .maybeSingle();
+
+      if (roleError) {
+        console.error("Role check error:", roleError);
+        await supabase.auth.signOut();
+        toast({
+          title: "Error",
+          description: "Could not verify driver status. Please try again.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!userRoles) {
+        console.warn("User has no driver role:", user.id);
+        await supabase.auth.signOut();
+        toast({
+          title: "Access denied",
+          description: "You don't have driver privileges. Please sign up as a driver first.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Success - navigate to driver dashboard
+      toast({
+        title: "Welcome!",
+        description: "You've been signed in successfully.",
+      });
       navigate("/driver");
+    } catch (error) {
+      console.error("Unexpected login error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate inputs
+    if (!displayName || !email || !password) {
+      toast({
+        title: "Validation error",
+        description: "Please fill in all fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Validation error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: { display_name: displayName, role: "driver" },
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Signup failed", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Check your email", description: "We sent you a confirmation link. Please verify to start delivering." });
+
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { display_name: displayName, role: "driver" },
+          emailRedirectTo: window.location.origin,
+        },
+      });
+
+      if (error) {
+        console.error("Signup error:", error);
+        toast({
+          title: "Signup failed",
+          description: error.message,
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!data.user) {
+        toast({
+          title: "Signup failed",
+          description: "Could not create account. Please try again.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We sent you a confirmation link. Please verify to start delivering.",
+        variant: "default"
+      });
+
+      // Reset form
+      setDisplayName("");
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      console.error("Unexpected signup error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate email
+    if (!email) {
+      toast({
+        title: "Validation error",
+        description: "Please enter your email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      toast({ title: "Check your email", description: "Password reset link sent." });
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) {
+        console.error("Password reset error:", error);
+        toast({
+          title: "Error",
+          description: error.message,
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
+      toast({
+        title: "Check your email",
+        description: "We sent you a password reset link. Please check your inbox and spam folder."
+      });
+    } catch (error) {
+      console.error("Unexpected password reset error:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "An unexpected error occurred. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 

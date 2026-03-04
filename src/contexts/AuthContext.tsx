@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+    let sessionCheckTimeout: NodeJS.Timeout;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
@@ -69,23 +70,44 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          setTimeout(() => fetchUserData(session.user.id), 0);
+          // Fetch user data and wait for it to complete
+          try {
+            await fetchUserData(session.user.id);
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          }
         } else {
           setRoles([]);
           setProfile(null);
         }
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     );
+
+    // Set a timeout to ensure loading completes even if Supabase is slow
+    sessionCheckTimeout = setTimeout(() => {
+      if (isMounted) {
+        setLoading(false);
+      }
+    }, 5000);
 
     (async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
+
         setSession(session);
         setUser(session?.user ?? null);
+
         if (session?.user) {
-          await fetchUserData(session.user.id);
+          // Wait for user data to be fetched
+          try {
+            await fetchUserData(session.user.id);
+          } catch (err) {
+            console.error("Error fetching user data:", err);
+          }
         }
       } catch (error) {
         console.error("Failed to load session:", error);
@@ -96,6 +118,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setProfile(null);
       } finally {
         if (isMounted) {
+          clearTimeout(sessionCheckTimeout);
           setLoading(false);
         }
       }
@@ -103,16 +126,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       isMounted = false;
+      clearTimeout(sessionCheckTimeout);
       subscription.unsubscribe();
     };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setRoles([]);
-    setProfile(null);
+    try {
+      // First clear local state immediately to prevent any UI flashing
+      setUser(null);
+      setSession(null);
+      setRoles([]);
+      setProfile(null);
+
+      // Then sign out from Supabase (in background)
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("Error signing out:", error);
+      }
+    } catch (error) {
+      console.error("Sign out error:", error);
+      // Still clear state even if there was an error
+      setUser(null);
+      setSession(null);
+      setRoles([]);
+      setProfile(null);
+    }
   };
 
   return (

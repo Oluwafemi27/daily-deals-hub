@@ -10,12 +10,17 @@ export default defineConfig(({ mode }) => ({
     hmr: {
       overlay: false,
     },
+    // SPA fallback: serve index.html for any route that doesn't match a file
+    middlewareMode: false,
   },
   plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  preview: {
+    port: 8080,
   },
   build: {
     minify: "terser",
