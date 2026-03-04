@@ -12,7 +12,7 @@ import {
 import BannerSlideshow from "@/components/BannerSlideshow";
 
 const driverBanners = [
-  { title: "Earn More", subtitle: "Set your own rates per km", gradient: "bg-gradient-to-r from-primary to-secondary", emoji: "💰" },
+  { title: "Earn More", subtitle: "Set your own rates per mile/km", gradient: "bg-gradient-to-r from-primary to-secondary", emoji: "💰" },
   { title: "Be Your Own Boss", subtitle: "Work whenever you want", gradient: "bg-gradient-to-br from-secondary to-accent", emoji: "🚚" },
   { title: "Get Verified", subtitle: "Complete KYC to start earning", gradient: "bg-gradient-to-r from-accent to-primary", emoji: "✓" },
 ];
