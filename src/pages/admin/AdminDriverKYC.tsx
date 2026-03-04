@@ -31,7 +31,7 @@ interface DriverKYC {
   id_image_url?: string;
   proof_of_address_url?: string;
   vehicle_registration_url?: string;
-  insurance_certificate_url?: string;
+  drivers_license_url?: string;
   status: "pending" | "approved" | "rejected";
   rejection_reason?: string;
   submitted_at: string;
@@ -270,15 +270,15 @@ const AdminDriverKYC = () => {
                             View Vehicle Registration
                           </a>
                         )}
-                        {kyc.insurance_certificate_url && (
+                        {kyc.drivers_license_url && (
                           <a
-                            href={kyc.insurance_certificate_url}
+                            href={kyc.drivers_license_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex items-center gap-1 text-primary hover:underline"
                           >
                             <FileText className="h-4 w-4" />
-                            View Insurance Certificate
+                            View Driver's License
                           </a>
                         )}
                       </div>

@@ -22,7 +22,7 @@ const DriverKYC = () => {
   const [idImageUrl, setIdImageUrl] = useState("");
   const [proofOfAddressUrl, setProofOfAddressUrl] = useState("");
   const [vehicleRegistrationUrl, setVehicleRegistrationUrl] = useState("");
-  const [insuranceCertificateUrl, setInsuranceCertificateUrl] = useState("");
+  const [driversLicenseUrl, setDriversLicenseUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ const DriverKYC = () => {
         setIdImageUrl(data.id_image_url || "");
         setProofOfAddressUrl(data.proof_of_address_url || "");
         setVehicleRegistrationUrl(data.vehicle_registration_url || "");
-        setInsuranceCertificateUrl(data.insurance_certificate_url || "");
+        setDriversLicenseUrl(data.drivers_license_url || "");
       }
       return data;
     },
@@ -81,8 +81,8 @@ const DriverKYC = () => {
         case "vehicle_registration":
           setVehicleRegistrationUrl(imageUrl);
           break;
-        case "insurance_certificate":
-          setInsuranceCertificateUrl(imageUrl);
+        case "drivers_license":
+          setDriversLicenseUrl(imageUrl);
           break;
       }
 
@@ -110,7 +110,7 @@ const DriverKYC = () => {
       return;
     }
 
-    if (!idImageUrl || !proofOfAddressUrl || !vehicleRegistrationUrl || !insuranceCertificateUrl) {
+    if (!idImageUrl || !proofOfAddressUrl || !vehicleRegistrationUrl || !driversLicenseUrl) {
       toast({
         title: "Error",
         description: "Please upload all required documents",
@@ -129,7 +129,7 @@ const DriverKYC = () => {
           id_image_url: idImageUrl,
           proof_of_address_url: proofOfAddressUrl,
           vehicle_registration_url: vehicleRegistrationUrl,
-          insurance_certificate_url: insuranceCertificateUrl,
+          drivers_license_url: driversLicenseUrl,
           full_name: fullName,
           phone: phone,
           address: address,
@@ -336,12 +336,12 @@ const DriverKYC = () => {
         {/* Vehicle Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Vehicle Documents</CardTitle>
+            <CardTitle>Vehicle & Driving Documents</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-1 gap-3">
               {renderImageUpload("vehicle_registration", "Vehicle Registration", vehicleRegistrationUrl)}
-              {renderImageUpload("insurance_certificate", "Insurance Certificate", insuranceCertificateUrl)}
+              {renderImageUpload("drivers_license", "Driver's License", driversLicenseUrl)}
             </div>
           </CardContent>
         </Card>
