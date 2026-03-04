@@ -19,23 +19,8 @@ const buyerBanners = [
 
 const Index = () => {
   const { user, roles, loading } = useAuth();
-  const isSeller = roles.includes("seller") && !roles.includes("buyer");
 
-  // Show loading state while auth is loading
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // If pure seller (not also a buyer), redirect to seller dashboard
-  if (isSeller) return <Navigate to="/seller" replace />;
-
+  // ALL HOOKS MUST BE CALLED BEFORE ANY EARLY RETURNS
   const { data: categories = [], isLoading: catLoading } = useQuery({
     queryKey: ["categories"],
     queryFn: async () => {
@@ -89,8 +74,26 @@ const Index = () => {
       return count ?? 0;
     },
     enabled: !!user,
-    refetchInterval: 5000, // Refetch every 5 seconds to keep count updated
+    refetchInterval: 5000,
   });
+
+  // NOW we can do conditional logic after all hooks are called
+  const isSeller = roles.includes("seller") && !roles.includes("buyer");
+
+  // Show loading state while auth is loading
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If pure seller (not also a buyer), redirect to seller dashboard
+  if (isSeller) return <Navigate to="/seller" replace />;
 
   return (
     <div className="min-h-screen bg-background pb-4">
