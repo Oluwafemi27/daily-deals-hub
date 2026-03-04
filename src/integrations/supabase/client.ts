@@ -10,14 +10,85 @@ if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
   console.warn('⚠️ Missing Supabase environment variables. Check VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY');
 }
 
+// Custom storage adapter that avoids NavigatorLockManager timeout issues
+class NoLockStorage implements Storage {
+  private data: Map<string, string> = new Map();
+
+  constructor() {
+    // Try to initialize from localStorage if available, but don't rely on locks
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key) {
+            this.data.set(key, window.localStorage.getItem(key) || '');
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Could not initialize storage from localStorage:', e);
+    }
+  }
+
+  getItem(key: string): string | null {
+    return this.data.get(key) || null;
+  }
+
+  setItem(key: string, value: string): void {
+    this.data.set(key, value);
+    // Try to persist to localStorage without relying on locks
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(key, value);
+      }
+    } catch (e) {
+      console.warn(`Could not persist ${key} to localStorage:`, e);
+    }
+  }
+
+  removeItem(key: string): void {
+    this.data.delete(key);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.removeItem(key);
+      }
+    } catch (e) {
+      console.warn(`Could not remove ${key} from localStorage:`, e);
+    }
+  }
+
+  clear(): void {
+    this.data.clear();
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.clear();
+      }
+    } catch (e) {
+      console.warn('Could not clear localStorage:', e);
+    }
+  }
+
+  get length(): number {
+    return this.data.size;
+  }
+
+  key(index: number): string | null {
+    const keys = Array.from(this.data.keys());
+    return keys[index] || null;
+  }
+}
+
+const storage = new NoLockStorage();
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: storage,
     persistSession: true,
     autoRefreshToken: true,
+    detectSessionInUrl: true,
   },
   global: {
     headers: {
