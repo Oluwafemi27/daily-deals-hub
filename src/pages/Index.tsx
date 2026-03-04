@@ -89,6 +89,7 @@ const Index = () => {
 
   // NOW we can do conditional logic after all hooks are called
   const isSeller = roles.includes("seller") && !roles.includes("buyer");
+  const isDriver = roles.includes("driver") && !roles.includes("buyer");
 
   // Show loading state while auth is loading
   if (loading) {
@@ -104,6 +105,9 @@ const Index = () => {
 
   // If pure seller (not also a buyer), redirect to seller dashboard
   if (isSeller) return <Navigate to="/seller" replace />;
+
+  // If pure driver (not also a buyer), redirect to driver dashboard
+  if (isDriver) return <Navigate to="/driver" replace />;
 
   return (
     <div className="min-h-screen bg-background pb-4">

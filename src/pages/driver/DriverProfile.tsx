@@ -15,6 +15,7 @@ const DriverProfile = () => {
   const [vehicleType, setVehicleType] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
   const [pricePerKm, setPricePerKm] = useState("");
+  const [pricePerMile, setPricePerMile] = useState("");
   const [isAvailable, setIsAvailable] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -32,6 +33,7 @@ const DriverProfile = () => {
         setVehicleType(data.vehicle_type || "");
         setLicensePlate(data.license_plate || "");
         setPricePerKm(data.price_per_km || "");
+        setPricePerMile(data.price_per_mile || "");
         setIsAvailable(data.is_available);
       }
       return data;
@@ -40,10 +42,10 @@ const DriverProfile = () => {
   });
 
   const handleSave = async () => {
-    if (!user || !vehicleName || !vehicleType || !licensePlate || !pricePerKm) {
+    if (!user || !vehicleName || !vehicleType || !licensePlate || (!pricePerKm && !pricePerMile)) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: "Please fill in all fields (including at least one price rate)",
         variant: "destructive",
       });
       return;
@@ -58,7 +60,8 @@ const DriverProfile = () => {
           vehicle_name: vehicleName,
           vehicle_type: vehicleType,
           license_plate: licensePlate,
-          price_per_km: parseFloat(pricePerKm),
+          price_per_km: parseFloat(pricePerKm) || 0,
+          price_per_mile: parseFloat(pricePerMile) || 0,
           is_available: isAvailable,
         })
         .eq("driver_id", user.id);
@@ -174,15 +177,27 @@ const DriverProfile = () => {
                 placeholder="e.g., ABC-1234" 
               />
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Price Per Km ($)</label>
-              <Input 
-                type="number" 
-                value={pricePerKm} 
-                onChange={(e) => setPricePerKm(e.target.value)} 
-                placeholder="e.g., 5.00"
-                step="0.01"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Price Per Km ($)</label>
+                <Input
+                  type="number"
+                  value={pricePerKm}
+                  onChange={(e) => setPricePerKm(e.target.value)}
+                  placeholder="e.g., 5.00"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Price Per Mile ($)</label>
+                <Input
+                  type="number"
+                  value={pricePerMile}
+                  onChange={(e) => setPricePerMile(e.target.value)}
+                  placeholder="e.g., 8.05"
+                  step="0.01"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
