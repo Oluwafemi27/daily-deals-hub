@@ -78,7 +78,7 @@ const queryClient = new QueryClient();
 
 // App content component - wrapped with providers
 const AppContent = () => (
-  <BrowserRouter>
+  <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
     <Routes>
       {/* Auth routes */}
       <Route path="/get-started" element={<Suspense fallback={<LoadingFallback />}><GetStarted /></Suspense>} />

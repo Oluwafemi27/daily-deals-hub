@@ -34,25 +34,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [profile, setProfile] = useState<any | null>(null);
 
   const fetchUserData = async (userId: string) => {
+    console.log("Fetching user data for:", userId);
     try {
       const [profileRes, rolesRes] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", userId).single(),
+        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", userId),
       ]);
 
       if (profileRes.error) {
-        console.error("Failed to fetch profile:", profileRes.error);
+        console.warn("Failed to fetch profile:", profileRes.error.message);
       } else if (profileRes.data) {
         setProfile(profileRes.data);
+      } else {
+        console.log("No profile found for user:", userId);
       }
 
       if (rolesRes.error) {
-        console.error("Failed to fetch roles:", rolesRes.error);
+        console.warn("Failed to fetch roles:", rolesRes.error.message);
       } else if (rolesRes.data) {
-        setRoles(rolesRes.data.map((r: any) => r.role as UserRole));
+        const userRoles = rolesRes.data.map((r: any) => r.role as UserRole);
+        console.log("User roles fetched:", userRoles);
+        setRoles(userRoles);
       }
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Critical error in fetchUserData:", error);
     }
   };
 
@@ -81,6 +86,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setProfile(null);
         }
         if (isMounted) {
+          console.log("Auth state change complete. Loading: false");
           setLoading(false);
         }
       }
@@ -88,7 +94,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Set a timeout to ensure loading completes even if Supabase is slow
     sessionCheckTimeout = setTimeout(() => {
-      if (isMounted) {
+      if (isMounted && loading) {
+        console.warn("Forcing auth loading to complete after timeout");
         setLoading(false);
       }
     }, 5000);
