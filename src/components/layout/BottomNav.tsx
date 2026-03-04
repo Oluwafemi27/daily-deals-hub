@@ -15,13 +15,25 @@ const BottomNav = () => {
     queryKey: ["cart-count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { count } = await supabase
-        .from("cart_items")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      return count ?? 0;
+      try {
+        const { count, error } = await supabase
+          .from("cart_items")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id);
+        if (error) {
+          console.error("Error fetching cart count:", error);
+          return 0;
+        }
+        return count ?? 0;
+      } catch (error) {
+        console.error("Error fetching cart count:", error);
+        return 0;
+      }
     },
     enabled: !!user && !isSeller && !isDriver,
+    staleTime: 30000, // Cache for 30 seconds
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1,
   });
 
   const buyerNav = [

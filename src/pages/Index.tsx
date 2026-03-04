@@ -65,16 +65,26 @@ const Index = () => {
     queryKey: ["unread-notifications-count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      if (error) throw error;
-      return count ?? 0;
+      try {
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false);
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          return 0;
+        }
+        return count ?? 0;
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return 0;
+      }
     },
     enabled: !!user,
-    refetchInterval: 5000,
+    refetchInterval: 30000, // Reduced from 5000 for better performance
+    staleTime: 10000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // NOW we can do conditional logic after all hooks are called

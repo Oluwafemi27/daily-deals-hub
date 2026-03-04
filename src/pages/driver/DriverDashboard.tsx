@@ -22,50 +22,80 @@ const DriverDashboard = () => {
   const navigate = useNavigate();
   const isDriver = roles.includes("driver");
 
-  const { data: driverInfo } = useQuery({
+  const { data: driverInfo, isLoading: driverInfoLoading } = useQuery({
     queryKey: ["driver-info", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const { data } = await supabase.from("driver_profiles").select("*").eq("driver_id", user.id).maybeSingle();
-      return data;
+      try {
+        const { data, error } = await supabase.from("driver_profiles").select("*").eq("driver_id", user.id).maybeSingle();
+        if (error) {
+          console.error("Error fetching driver info:", error);
+          return null;
+        }
+        return data;
+      } catch (error) {
+        console.error("Error fetching driver info:", error);
+        return null;
+      }
     },
     enabled: !!user && isDriver,
+    staleTime: 60000, // Cache for 1 minute
+    gcTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
+    retry: 1,
   });
 
-  const { data: stats } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["driver-stats", user?.id],
     queryFn: async () => {
       if (!user) return null;
-      const [jobs, completedJobs, earnings] = await Promise.all([
-        supabase.from("delivery_jobs").select("id").eq("driver_id", user.id),
-        supabase.from("delivery_jobs").select("id").eq("driver_id", user.id).eq("status", "delivered"),
-        supabase.from("driver_wallets").select("balance, total_earned").eq("driver_id", user.id).maybeSingle(),
-      ]);
-      return {
-        totalJobs: jobs.data?.length ?? 0,
-        completedJobs: completedJobs.data?.length ?? 0,
-        balance: earnings.data?.balance ?? 0,
-        totalEarned: earnings.data?.total_earned ?? 0,
-      };
+      try {
+        const [jobsRes, completedJobsRes, earningsRes] = await Promise.all([
+          supabase.from("delivery_jobs").select("id", { count: "exact" }).eq("driver_id", user.id),
+          supabase.from("delivery_jobs").select("id", { count: "exact" }).eq("driver_id", user.id).eq("status", "delivered"),
+          supabase.from("driver_wallets").select("balance, total_earned").eq("driver_id", user.id).maybeSingle(),
+        ]);
+        return {
+          totalJobs: jobsRes.count ?? 0,
+          completedJobs: completedJobsRes.count ?? 0,
+          balance: earningsRes.data?.balance ?? 0,
+          totalEarned: earningsRes.data?.total_earned ?? 0,
+        };
+      } catch (error) {
+        console.error("Error fetching driver stats:", error);
+        return { totalJobs: 0, completedJobs: 0, balance: 0, totalEarned: 0 };
+      }
     },
     enabled: !!user && isDriver,
+    staleTime: 60000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  // Unread notifications count
+  // Unread notifications count - only refetch every 30 seconds instead of 5
   const { data: notificationCount = 0 } = useQuery({
     queryKey: ["unread-notifications-count", user?.id],
     queryFn: async () => {
       if (!user) return 0;
-      const { count, error } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
-      if (error) throw error;
-      return count ?? 0;
+      try {
+        const { count, error } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("is_read", false);
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          return 0;
+        }
+        return count ?? 0;
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+        return 0;
+      }
     },
     enabled: !!user,
-    refetchInterval: 5000,
+    refetchInterval: 30000, // Reduced from 5000 to 30000
+    staleTime: 10000,
+    gcTime: 5 * 60 * 1000,
   });
 
   // Show loading state while auth is loading
@@ -140,21 +170,21 @@ const DriverDashboard = () => {
         <Card>
           <CardContent className="flex flex-col items-center p-3">
             <Truck className="h-5 w-5 text-primary mb-1" />
-            <p className="text-xl font-bold">{stats?.completedJobs ?? 0}</p>
+            <p className="text-xl font-bold">{statsLoading ? "..." : stats?.completedJobs ?? 0}</p>
             <p className="text-[10px] text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex flex-col items-center p-3">
             <MapPin className="h-5 w-5 text-secondary mb-1" />
-            <p className="text-xl font-bold">{stats?.totalJobs ?? 0}</p>
+            <p className="text-xl font-bold">{statsLoading ? "..." : stats?.totalJobs ?? 0}</p>
             <p className="text-[10px] text-muted-foreground">Total Jobs</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="flex flex-col items-center p-3">
             <TrendingUp className="h-5 w-5 text-success mb-1" />
-            <p className="text-xl font-bold">${driverInfo?.average_rating?.toFixed(1) ?? "0"}</p>
+            <p className="text-xl font-bold">{driverInfoLoading ? "..." : driverInfo?.average_rating?.toFixed(1) ?? "0"}</p>
             <p className="text-[10px] text-muted-foreground">Rating</p>
           </CardContent>
         </Card>
