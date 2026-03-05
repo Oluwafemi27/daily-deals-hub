@@ -459,6 +459,72 @@ export type Database = {
           },
         ]
       }
+      seller_ratings: {
+        Row: {
+          buyer_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          order_id: string | null
+          rating: number
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          rating: number
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string | null
+          rating?: number
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      driver_ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          driver_id: string
+          id: string
+          order_id: string | null
+          rating: number
+          seller_id: string
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          driver_id: string
+          id?: string
+          order_id?: string | null
+          rating: number
+          seller_id: string
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          driver_id?: string
+          id?: string
+          order_id?: string | null
+          rating?: number
+          seller_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seller_wallets: {
         Row: {
           balance: number
@@ -555,7 +621,7 @@ export type Database = {
       is_seller: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "buyer" | "seller" | "admin"
+      app_role: "buyer" | "seller" | "admin" | "driver"
       order_status:
         | "pending"
         | "processing"
@@ -690,7 +756,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["buyer", "seller", "admin"],
+      app_role: ["buyer", "seller", "admin", "driver"],
       order_status: [
         "pending",
         "processing",
