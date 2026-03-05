@@ -200,7 +200,7 @@ const SellerDeliveryDrivers = () => {
                       onClick={() => setSelectedDriver(driver.driver_id)}
                     >
                       <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
+                        <div className="flex items-start justify-between gap-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <p className="font-semibold">
@@ -234,11 +234,20 @@ const SellerDeliveryDrivers = () => {
                               </div>
                             </div>
                           </div>
-                          {selectedDriver === driver.driver_id && (
-                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary flex-shrink-0">
-                              <Check className="h-4 w-4 text-primary-foreground" />
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Link
+                              to={`/driver/${driver.driver_id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-xs text-primary hover:underline px-2 py-1"
+                            >
+                              View Profile
+                            </Link>
+                            {selectedDriver === driver.driver_id && (
+                              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary flex-shrink-0">
+                                <Check className="h-4 w-4 text-primary-foreground" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

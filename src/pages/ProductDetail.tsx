@@ -54,6 +54,32 @@ const ProductDetail = () => {
     enabled: !!user && !!id,
   });
 
+  const { data: seller } = useQuery({
+    queryKey: ["seller", product?.seller_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", product?.seller_id!)
+        .single();
+      return data;
+    },
+    enabled: !!product?.seller_id,
+  });
+
+  const { data: sellerRatingAvg } = useQuery({
+    queryKey: ["seller-rating-avg", product?.seller_id],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("buyer_seller_ratings")
+        .select("rating")
+        .eq("seller_id", product?.seller_id!);
+      if (!data || data.length === 0) return 0;
+      return (data.reduce((sum, r) => sum + r.rating, 0) / data.length).toFixed(1);
+    },
+    enabled: !!product?.seller_id,
+  });
+
   const addToCart = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Not logged in");
@@ -192,6 +218,37 @@ const ProductDetail = () => {
             <h3 className="text-sm font-semibold mb-1">Description</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-line">{product.description}</p>
           </div>
+        )}
+
+        {/* Seller Info */}
+        {seller && (
+          <Link to={`/seller/${product.seller_id}`}>
+            <div className="rounded-lg border border-border p-3 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-full overflow-hidden bg-muted flex-shrink-0">
+                  {seller.avatar_url ? (
+                    <img src={seller.avatar_url} alt={seller.store_name} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-lg">🏪</div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{seller.store_name || seller.display_name}</p>
+                  {sellerRatingAvg !== undefined && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className={cn("h-3 w-3", i < Math.round(parseFloat(sellerRatingAvg as string)) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground")} />
+                        ))}
+                      </div>
+                      <span className="text-xs text-muted-foreground">{sellerRatingAvg}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="text-muted-foreground">→</div>
+              </div>
+            </div>
+          </Link>
         )}
 
         {/* Reviews */}

@@ -33,6 +33,8 @@ const SellerOrders = lazy(() => import("./pages/seller/SellerOrders"));
 const SellerProfile = lazy(() => import("./pages/seller/SellerProfile"));
 const SellerKYC = lazy(() => import("./pages/seller/SellerKYC"));
 const SellerDeliveryDrivers = lazy(() => import("./pages/seller/SellerDeliveryDrivers"));
+const SellerProfileView = lazy(() => import("./pages/SellerProfileView"));
+const DriverProfileView = lazy(() => import("./pages/DriverProfileView"));
 const DriverDashboard = lazy(() => import("./pages/driver/DriverDashboard"));
 const DriverJobs = lazy(() => import("./pages/driver/DriverJobs"));
 const DriverProfile = lazy(() => import("./pages/driver/DriverProfile"));
@@ -113,6 +115,8 @@ const AppContent = () => (
         <Route path="/wishlist" element={<Suspense fallback={<PageLoadingFallback />}><Wishlist /></Suspense>} />
         <Route path="/profile" element={<Suspense fallback={<PageLoadingFallback />}><Profile /></Suspense>} />
         <Route path="/product/:id" element={<Suspense fallback={<PageLoadingFallback />}><ProductDetail /></Suspense>} />
+        <Route path="/seller/:sellerId" element={<Suspense fallback={<PageLoadingFallback />}><SellerProfileView /></Suspense>} />
+        <Route path="/driver/:driverId" element={<Suspense fallback={<PageLoadingFallback />}><DriverProfileView /></Suspense>} />
         <Route path="/messages" element={<Suspense fallback={<PageLoadingFallback />}><Messages /></Suspense>} />
         <Route path="/notifications" element={<Suspense fallback={<PageLoadingFallback />}><Notifications /></Suspense>} />
         <Route path="/orders" element={<Suspense fallback={<PageLoadingFallback />}><Orders /></Suspense>} />
