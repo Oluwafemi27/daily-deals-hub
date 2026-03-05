@@ -43,21 +43,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (profileRes.error) {
         console.warn("Failed to fetch profile:", profileRes.error.message);
+        // Don't fail - user might not have profile yet
       } else if (profileRes.data) {
+        console.log("Profile found:", profileRes.data.id);
         setProfile(profileRes.data);
       } else {
-        console.log("No profile found for user:", userId);
+        console.log("No profile found - will be created automatically");
+        // Profile will be auto-created by trigger
       }
 
       if (rolesRes.error) {
         console.warn("Failed to fetch roles:", rolesRes.error.message);
-      } else if (rolesRes.data) {
+        // Default to buyer role if roles can't be fetched
+        setRoles(["buyer"]);
+      } else if (rolesRes.data && rolesRes.data.length > 0) {
         const userRoles = rolesRes.data.map((r: any) => r.role as UserRole);
         console.log("User roles fetched:", userRoles);
         setRoles(userRoles);
+      } else {
+        console.log("No roles found - defaulting to buyer");
+        setRoles(["buyer"]);
       }
     } catch (error) {
       console.error("Critical error in fetchUserData:", error);
+      // Still allow login to proceed even if data fetch fails
+      setRoles(["buyer"]);
     }
   };
 
@@ -94,11 +104,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Set a timeout to ensure loading completes even if Supabase is slow
     sessionCheckTimeout = setTimeout(() => {
-      if (isMounted && loading) {
-        console.warn("Forcing auth loading to complete after timeout");
+      if (isMounted) {
+        console.warn("Auth loading timeout - forcing completion");
         setLoading(false);
       }
-    }, 5000);
+    }, 3000);
 
     (async () => {
       try {
