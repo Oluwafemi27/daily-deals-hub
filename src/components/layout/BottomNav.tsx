@@ -1,9 +1,10 @@
-import { Home, Grid3X3, ShoppingCart, Heart, User, Store, Package, Wallet, LayoutDashboard, MapPin } from "lucide-react";
+import { Home, Grid3X3, ShoppingCart, Heart, User, Store, Package, Wallet, LayoutDashboard, MapPin, MessageCircle } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useUnreadMessagesCount } from "@/hooks/useUnreadMessagesCount";
 
 const BottomNav = () => {
   const location = useLocation();
@@ -36,26 +37,28 @@ const BottomNav = () => {
     retry: 1,
   });
 
+  const { data: unreadMessages = 0 } = useUnreadMessagesCount();
+
   const buyerNav = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Grid3X3, label: "Categories", path: "/categories" },
     { icon: ShoppingCart, label: "Cart", path: "/cart", badge: cartCount },
-    { icon: Heart, label: "Wishlist", path: "/wishlist" },
+    { icon: MessageCircle, label: "Messages", path: "/messages", badge: unreadMessages },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
   const sellerNav = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/seller" },
+    { icon: MessageCircle, label: "Messages", path: "/messages", badge: unreadMessages },
     { icon: Package, label: "Products", path: "/seller/products" },
     { icon: Wallet, label: "Wallet", path: "/seller/wallet" },
-    { icon: Store, label: "Store", path: "/seller/profile" },
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
   const driverNav = [
     { icon: LayoutDashboard, label: "Dashboard", path: "/driver" },
+    { icon: MessageCircle, label: "Messages", path: "/messages", badge: unreadMessages },
     { icon: MapPin, label: "Jobs", path: "/driver/jobs" },
-    { icon: Package, label: "Vehicle", path: "/driver/profile" },
     { icon: Wallet, label: "Wallet", path: "/driver/wallet" },
     { icon: User, label: "Profile", path: "/profile" },
   ];

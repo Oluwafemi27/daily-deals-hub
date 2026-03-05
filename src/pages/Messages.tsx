@@ -1,10 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Send, MessageCircle } from "lucide-react";
+import { ArrowLeft, Send, MessageCircle, Phone, Mail } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -24,7 +24,7 @@ const Messages = () => {
         .select("*")
         .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
         .order("created_at", { ascending: false });
-      
+
       // Group by other user
       const convMap = new Map<string, any>();
       (data ?? []).forEach((msg: any) => {
@@ -36,6 +36,25 @@ const Messages = () => {
       return Array.from(convMap.values());
     },
     enabled: !!user,
+  });
+
+  // Get user profiles for conversations
+  const { data: userProfiles = {} } = useQuery({
+    queryKey: ["user-profiles", conversations.map(c => c.userId).join(",")],
+    queryFn: async () => {
+      if (conversations.length === 0) return {};
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", conversations.map(c => c.userId));
+
+      const profiles: Record<string, any> = {};
+      (data ?? []).forEach(profile => {
+        profiles[profile.user_id] = profile;
+      });
+      return profiles;
+    },
+    enabled: conversations.length > 0,
   });
 
   // Get messages for selected chat
@@ -55,6 +74,27 @@ const Messages = () => {
     enabled: !!user && !!selectedChat,
     refetchInterval: 3000,
   });
+
+  // Mark messages as read when viewing chat
+  useEffect(() => {
+    const markAsRead = async () => {
+      if (!user || !selectedChat) return;
+      try {
+        await supabase
+          .from("messages")
+          .update({ is_read: true })
+          .eq("receiver_id", user.id)
+          .eq("sender_id", selectedChat)
+          .eq("is_read", false);
+
+        queryClient.invalidateQueries({ queryKey: ["unread-messages-count"] });
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    };
+
+    markAsRead();
+  }, [selectedChat, user, queryClient]);
 
   const sendMessage = useMutation({
     mutationFn: async () => {
@@ -144,24 +184,30 @@ const Messages = () => {
         </div>
       ) : (
         <div className="divide-y divide-border">
-          {conversations.map((conv: any) => (
-            <button
-              key={conv.userId}
-              onClick={() => setSelectedChat(conv.userId)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
-                U
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium">User</p>
-                <p className="text-xs text-muted-foreground truncate">{conv.lastMessage.content}</p>
-              </div>
-              <span className="text-[10px] text-muted-foreground">
-                {new Date(conv.lastMessage.created_at).toLocaleDateString()}
-              </span>
-            </button>
-          ))}
+          {conversations.map((conv: any) => {
+            const profile = userProfiles[conv.userId];
+            const displayName = profile?.display_name || "User";
+            const avatar = displayName[0]?.toUpperCase() || "U";
+
+            return (
+              <button
+                key={conv.userId}
+                onClick={() => setSelectedChat(conv.userId)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                  {avatar}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">{displayName}</p>
+                  <p className="text-xs text-muted-foreground truncate">{conv.lastMessage.content}</p>
+                </div>
+                <span className="text-[10px] text-muted-foreground">
+                  {new Date(conv.lastMessage.created_at).toLocaleDateString()}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>
