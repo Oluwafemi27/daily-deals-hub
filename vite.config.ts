@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => ({
     },
     // SPA fallback: serve index.html for any route that doesn't match a file
     middlewareMode: false,
+    allowedHosts: ["daily-deals-hub.onrender.com"],
   },
   plugins: [react()],
   resolve: {
