@@ -9,7 +9,11 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     hmr: {
       overlay: false,
+      host: "localhost",
+      port: 8080,
     },
+    // Allow all hosts to connect (important for Render/proxy deployments)
+    allowedHosts: "all",
     // SPA fallback: serve index.html for any route that doesn't match a file
     middlewareMode: false,
     cors: true,
