@@ -19,10 +19,14 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [qty, setQty] = useState(1);
 
-  const { data: product, isLoading } = useQuery({
+  const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data } = await supabase.from("products").select("*").eq("id", id).single();
+      const { data, error } = await supabase.from("products").select("*").eq("id", id).single();
+      if (error) {
+        console.error("Error fetching product:", error);
+        throw error;
+      }
       return data;
     },
   });
@@ -131,10 +135,30 @@ const ProductDetail = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Error loading product</h2>
+          <p className="text-sm text-muted-foreground mb-4">{(error as Error).message}</p>
+          <Button onClick={() => navigate("/")} variant="outline">
+            Back to home
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   if (!product) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p>Product not found</p>
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Product not found</h2>
+          <p className="text-sm text-muted-foreground mb-4">This product may have been removed or is no longer available</p>
+          <Button onClick={() => navigate("/")} variant="outline">
+            Back to home
+          </Button>
+        </div>
       </div>
     );
   }
