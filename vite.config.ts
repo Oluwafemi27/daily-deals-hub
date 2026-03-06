@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
     },
     // SPA fallback: serve index.html for any route that doesn't match a file
     middlewareMode: false,
-    allowedHosts: true,
+    cors: true,
   },
   plugins: [react()],
   resolve: {
