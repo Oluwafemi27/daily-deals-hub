@@ -110,7 +110,14 @@ const DriverDashboard = () => {
     );
   }
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <div className="w-8 h-8 border-4 border-muted-foreground border-t-primary rounded-full animate-spin mx-auto mb-3"></div>
+        <p className="text-sm text-muted-foreground">Loading driver profile...</p>
+      </div>
+    </div>
+  );
   if (!user || !isDriver) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
