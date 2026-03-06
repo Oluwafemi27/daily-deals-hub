@@ -64,7 +64,7 @@ const SellerKYC = () => {
         .from("seller_kyc")
         .select("*")
         .eq("seller_id", user?.id)
-        .single();
+        .maybeSingle();
       if (error && error.code !== "PGRST116") throw error;
       return data;
     },

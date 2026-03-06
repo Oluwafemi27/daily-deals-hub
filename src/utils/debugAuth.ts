@@ -16,7 +16,7 @@ export const debugAuth = async () => {
         .from("profiles")
         .select("*")
         .eq("user_id", session.user.id)
-        .single();
+        .maybeSingle();
 
       console.log("Profile Error:", profileError?.message);
       console.log("Profile Data:", profile);

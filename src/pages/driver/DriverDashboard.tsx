@@ -110,6 +110,7 @@ const DriverDashboard = () => {
     );
   }
 
+  if (loading) return null;
   if (!user || !isDriver) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">

@@ -18,7 +18,7 @@ const SellerProfileView = () => {
         .from("profiles")
         .select("*")
         .eq("user_id", sellerId!)
-        .single();
+        .maybeSingle();
       return data;
     },
     enabled: !!sellerId,

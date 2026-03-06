@@ -88,6 +88,7 @@ const SellerDashboard = () => {
     );
   }
 
+  if (loading) return null;
   if (!user || !isSeller) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
