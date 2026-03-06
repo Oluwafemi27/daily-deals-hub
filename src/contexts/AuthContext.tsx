@@ -54,15 +54,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (rolesRes.error) {
         console.warn("Failed to fetch roles:", rolesRes.error.message);
-        // Default to buyer role if roles can't be fetched
-        setRoles(["buyer"]);
+        setRoles([]);
       } else if (rolesRes.data && rolesRes.data.length > 0) {
         const userRoles = rolesRes.data.map((r: any) => r.role as UserRole);
         console.log("User roles fetched:", userRoles);
         setRoles(userRoles);
       } else {
-        console.log("No roles found - defaulting to buyer");
-        setRoles(["buyer"]);
+        console.log("No roles found");
+        setRoles([]);
       }
     } catch (error) {
       console.error("Critical error in fetchUserData:", error);
