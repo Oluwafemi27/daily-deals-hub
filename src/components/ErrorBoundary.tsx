@@ -79,13 +79,13 @@ class ErrorBoundary extends React.Component<Props, State> {
                   Try Again
                 </Button>
                 <Button
-                  onClick={() => window.location.href = "/"}
+                  onClick={() => { this.handleReset(); window.history.pushState({}, "", "/"); window.dispatchEvent(new PopStateEvent("popstate")); }}
                   className="w-full bg-red-600 hover:bg-red-700"
                 >
                   Go Home
                 </Button>
                 <Button
-                  onClick={() => window.location.reload()}
+                  onClick={() => this.handleReset()}
                   variant="outline"
                   className="w-full"
                 >
