@@ -6,6 +6,8 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RatingDialog } from "@/components/RatingDialog";
+import { SellerRatingDialog } from "@/components/SellerRatingDialog";
+import { DriverRatingDialog } from "@/components/DriverRatingDialog";
 import { useState } from "react";
 
 const statusColors: Record<string, string> = {
@@ -63,16 +65,16 @@ const Orders = () => {
     queryFn: async () => {
       if (!user) return [];
       const { data: sellerRatings } = await supabase
-        .from("buyer_seller_ratings")
+        .from("seller_ratings")
         .select("order_id")
         .eq("buyer_id", user.id);
       const { data: driverRatings } = await supabase
-        .from("seller_driver_ratings")
-        .select("delivery_job_id")
+        .from("driver_ratings")
+        .select("order_id")
         .eq("seller_id", user.id);
       return {
         rated_orders: sellerRatings?.map(r => r.order_id) ?? [],
-        rated_deliveries: driverRatings?.map(r => r.delivery_job_id) ?? [],
+        rated_deliveries: driverRatings?.map(r => r.order_id) ?? [],
       };
     },
     enabled: !!user,
@@ -105,7 +107,7 @@ const Orders = () => {
           {orders.map((order: any) => {
             const deliveryJob = deliveryJobs.find(j => j.order_id === order.id);
             const isRated = userRatings?.rated_orders?.includes(order.id);
-            const driverRated = userRatings?.rated_deliveries?.includes(deliveryJob?.id);
+            const driverRated = userRatings?.rated_deliveries?.includes(order.id);
             const seller = order.order_items?.[0]?.seller;
 
             return (
@@ -208,24 +210,20 @@ const Orders = () => {
       )}
 
       {/* Rating Dialogs */}
-      <RatingDialog
-        isOpen={ratingDialog.isOpen}
-        onClose={() => setRatingDialog({ isOpen: false })}
-        rateeName={ratingDialog.sellerName}
-        rateeId={ratingDialog.sellerId || ""}
+      <SellerRatingDialog
+        open={ratingDialog.isOpen}
+        onOpenChange={(open) => setRatingDialog(prev => ({ ...prev, isOpen: open }))}
+        sellerId={ratingDialog.sellerId || ""}
+        sellerName={ratingDialog.sellerName}
         orderId={ratingDialog.orderId}
-        type="seller"
-        onRatingSubmitted={() => setRatingDialog({ isOpen: false })}
       />
 
-      <RatingDialog
-        isOpen={driverRatingDialog.isOpen}
-        onClose={() => setDriverRatingDialog({ isOpen: false })}
-        rateeName={driverRatingDialog.driverName}
-        rateeId={driverRatingDialog.driverId || ""}
-        deliveryJobId={driverRatingDialog.deliveryJobId}
-        type="driver"
-        onRatingSubmitted={() => setDriverRatingDialog({ isOpen: false })}
+      <DriverRatingDialog
+        open={driverRatingDialog.isOpen}
+        onOpenChange={(open) => setDriverRatingDialog(prev => ({ ...prev, isOpen: open }))}
+        driverId={driverRatingDialog.driverId || ""}
+        driverName={driverRatingDialog.driverName}
+        orderId={driverRatingDialog.orderId}
       />
     </div>
   );

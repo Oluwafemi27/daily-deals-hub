@@ -39,6 +39,9 @@ const BottomNav = () => {
 
   const { data: unreadMessages = 0 } = useUnreadMessagesCount();
 
+  const isDriverPath = location.pathname.startsWith("/driver");
+  const isSellerPath = location.pathname.startsWith("/seller");
+
   const buyerNav = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Grid3X3, label: "Categories", path: "/categories" },
@@ -63,7 +66,24 @@ const BottomNav = () => {
     { icon: User, label: "Profile", path: "/profile" },
   ];
 
-  const navItems = isDriver ? driverNav : isSeller ? sellerNav : buyerNav;
+  let navItems = buyerNav;
+  if (isDriverPath && isDriver) {
+    navItems = driverNav;
+  } else if (isSellerPath && isSeller) {
+    navItems = sellerNav;
+  } else if (location.pathname === "/profile" || location.pathname === "/messages") {
+    // For shared pages like Profile/Messages, stick to the current context if possible
+    // or use the primary role
+    if (isDriver && !isSeller) navItems = driverNav;
+    else if (isSeller) navItems = sellerNav;
+    else navItems = buyerNav;
+  } else if (isDriver && !isSeller && !isSellerPath && !buyerNav.some(i => i.path !== "/" && location.pathname.startsWith(i.path))) {
+    // If only a driver and not on a specific buyer page, default to driver nav
+    navItems = driverNav;
+  } else if (isSeller && !isDriver && !isDriverPath && !buyerNav.some(i => i.path !== "/" && location.pathname.startsWith(i.path))) {
+    // If only a seller and not on a specific buyer page, default to seller nav
+    navItems = sellerNav;
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card pb-safe">

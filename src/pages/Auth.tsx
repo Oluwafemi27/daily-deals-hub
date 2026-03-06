@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/hooks/use-toast";
-import { ShoppingBag, Store, Eye, EyeOff } from "lucide-react";
+import { ShoppingBag, Store, Eye, EyeOff, Truck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Footer from "@/components/layout/Footer";
 
@@ -18,7 +18,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<"buyer" | "seller">("buyer");
+  const [role, setRole] = useState<"buyer" | "seller" | "driver">("buyer");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -105,6 +105,7 @@ const Auth = () => {
                     {[
                       { value: "buyer" as const, label: "Shop", icon: ShoppingBag, desc: "Browse & buy" },
                       { value: "seller" as const, label: "Sell", icon: Store, desc: "List products" },
+                      { value: "driver" as const, label: "Deliver", icon: Truck, desc: "Earn as driver" },
                     ].map((opt) => (
                       <button
                         key={opt.value}
@@ -119,7 +120,7 @@ const Auth = () => {
                       >
                         <opt.icon className={cn("h-6 w-6", role === opt.value ? "text-primary" : "text-muted-foreground")} />
                         <span className="text-sm font-semibold">{opt.label}</span>
-                        <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                        <span className="text-xs text-muted-foreground leading-tight">{opt.desc}</span>
                       </button>
                     ))}
                   </div>

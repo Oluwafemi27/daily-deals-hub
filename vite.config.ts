@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 
 // https://vitejs.dev/config/
@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => ({
     },
     // SPA fallback: serve index.html for any route that doesn't match a file
     middlewareMode: false,
-    allowedHosts: ["daily-deals-hub.onrender.com"],
+    cors: true,
   },
   plugins: [react()],
   resolve: {

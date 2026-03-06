@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContactButton } from "@/components/ContactButton";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -71,7 +72,7 @@ const ProductDetail = () => {
     queryKey: ["seller-rating-avg", product?.seller_id],
     queryFn: async () => {
       const { data } = await supabase
-        .from("buyer_seller_ratings")
+        .from("seller_ratings")
         .select("rating")
         .eq("seller_id", product?.seller_id!);
       if (!data || data.length === 0) return 0;
@@ -249,6 +250,18 @@ const ProductDetail = () => {
               </div>
             </div>
           </Link>
+        )}
+
+        {seller && (
+          <div className="mt-2">
+            <ContactButton
+              targetUserId={product.seller_id}
+              targetUserName={seller.store_name || seller.display_name}
+              initialMessage={`Hi, I'm interested in ${product.title}`}
+              className="w-full"
+              label="Contact Seller"
+            />
+          </div>
         )}
 
         {/* Reviews */}

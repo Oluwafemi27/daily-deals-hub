@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, Star, Truck, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContactButton } from "@/components/ContactButton";
 
 const DriverProfileView = () => {
   const { driverId } = useParams();
@@ -38,7 +39,7 @@ const DriverProfileView = () => {
     queryKey: ["driver-ratings", driverId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("seller_driver_ratings")
+        .from("driver_ratings")
         .select("*, seller:profiles!seller_id(display_name, avatar_url)")
         .eq("driver_id", driverId!)
         .order("created_at", { ascending: false })
@@ -135,6 +136,14 @@ const DriverProfileView = () => {
                 Verified
               </div>
             )}
+          </div>
+          <div className="mt-6">
+            <ContactButton
+              targetUserId={driverId!}
+              targetUserName={driverProfile?.display_name || driver.full_name}
+              className="w-full"
+              label="Contact Driver"
+            />
           </div>
         </CardContent>
       </Card>
