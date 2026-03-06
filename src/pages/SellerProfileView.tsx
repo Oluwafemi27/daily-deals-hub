@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ContactButton } from "@/components/ContactButton";
 
 const SellerProfileView = () => {
   const { sellerId } = useParams();
@@ -41,7 +42,7 @@ const SellerProfileView = () => {
     queryKey: ["seller-ratings", sellerId],
     queryFn: async () => {
       const { data } = await supabase
-        .from("buyer_seller_ratings")
+        .from("seller_ratings")
         .select("*, buyer:profiles!buyer_id(display_name, avatar_url)")
         .eq("seller_id", sellerId!)
         .order("created_at", { ascending: false })
@@ -198,10 +199,12 @@ const SellerProfileView = () => {
 
       {/* Contact */}
       <div className="px-4 mt-6 mb-4">
-        <Button className="w-full gap-2">
-          <MessageCircle className="h-4 w-4" />
-          Contact Seller
-        </Button>
+        <ContactButton
+          targetUserId={sellerId!}
+          targetUserName={seller.store_name || seller.display_name}
+          className="w-full"
+          label="Contact Seller"
+        />
       </div>
     </div>
   );

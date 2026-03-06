@@ -13,6 +13,8 @@ interface ContactButtonProps {
   variant?: "default" | "outline" | "secondary" | "ghost";
   size?: "default" | "sm" | "lg" | "icon";
   initialMessage?: string;
+  className?: string;
+  label?: string;
 }
 
 export const ContactButton = ({
@@ -21,6 +23,8 @@ export const ContactButton = ({
   variant = "default",
   size = "default",
   initialMessage,
+  className,
+  label = "Contact",
 }: ContactButtonProps) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -88,14 +92,14 @@ export const ContactButton = ({
       disabled={isLoading}
       variant={variant}
       size={size}
-      className="gap-2"
+      className={cn("gap-2", className)}
     >
       {isLoading ? (
         <Loader className="h-4 w-4 animate-spin" />
       ) : (
         <MessageCircle className="h-4 w-4" />
       )}
-      Contact
+      {label}
     </Button>
   );
 };

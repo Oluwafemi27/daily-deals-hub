@@ -5,6 +5,10 @@ import { ArrowLeft, ShoppingCart, Truck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ContactButton } from "@/components/ContactButton";
+import { DriverRatingDialog } from "@/components/DriverRatingDialog";
+import { useState } from "react";
+import { Star } from "lucide-react";
 
 const statusColors: Record<string, string> = {
   pending: "bg-accent/20 text-accent-foreground",
@@ -16,6 +20,12 @@ const statusColors: Record<string, string> = {
 
 const SellerOrders = () => {
   const { user } = useAuth();
+  const [ratingDialog, setRatingDialog] = useState<{
+    isOpen: boolean;
+    driverId?: string;
+    driverName?: string;
+    orderId?: string;
+  }>({ isOpen: false });
 
   const { data: orderItems = [] } = useQuery({
     queryKey: ["seller-orders", user?.id],
@@ -36,7 +46,7 @@ const SellerOrders = () => {
         const orderIds = [...new Set(data.map((item: any) => item.order_id))];
         const { data: deliveryJobs } = await supabase
           .from("delivery_jobs")
-          .select("order_id, status, driver_id")
+          .select("*, driver:profiles!driver_id(*)")
           .in("order_id", orderIds);
 
         // Map delivery jobs to order items
@@ -54,6 +64,19 @@ const SellerOrders = () => {
         }));
       }
       return data ?? [];
+    },
+    enabled: !!user,
+  });
+
+  const { data: ratedDeliveries = [] } = useQuery({
+    queryKey: ["seller-rated-deliveries", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      const { data } = await supabase
+        .from("driver_ratings")
+        .select("order_id")
+        .eq("seller_id", user.id);
+      return data?.map(r => r.order_id) ?? [];
     },
     enabled: !!user,
   });
@@ -113,11 +136,71 @@ const SellerOrders = () => {
                     </Button>
                   </Link>
                 )}
+
+                {hasDriver && (
+                  <div className="mt-3 space-y-3 pt-3 border-t border-border">
+                    {item.delivery.map((job: any) => {
+                      const isRated = ratedDeliveries.includes(item.order_id);
+                      return (
+                        <div key={job.driver_id} className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
+                                {job.driver?.avatar_url ? (
+                                  <img src={job.driver.avatar_url} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full items-center justify-center text-sm">👤</div>
+                                )}
+                              </div>
+                              <span className="text-xs font-semibold">{job.driver?.display_name || "Driver"}</span>
+                            </div>
+                            <Badge variant="outline" className="text-[10px] h-5">{job.status}</Badge>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <ContactButton
+                              targetUserId={job.driver_id}
+                              targetUserName={job.driver?.display_name}
+                              variant="outline"
+                              size="sm"
+                              className="flex-1 text-[10px] h-8"
+                              label="Contact Driver"
+                            />
+                            {job.status === "delivered" && !isRated && (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                className="flex-1 gap-1 text-[10px] h-8"
+                                onClick={() => setRatingDialog({
+                                  isOpen: true,
+                                  driverId: job.driver_id,
+                                  driverName: job.driver?.display_name,
+                                  orderId: item.order_id,
+                                })}
+                              >
+                                <Star className="h-3 w-3" />
+                                Rate Driver
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
       )}
+
+      <DriverRatingDialog
+        open={ratingDialog.isOpen}
+        onOpenChange={(open) => setRatingDialog(prev => ({ ...prev, isOpen: open }))}
+        driverId={ratingDialog.driverId || ""}
+        driverName={ratingDialog.driverName}
+        orderId={ratingDialog.orderId}
+      />
     </div>
   );
 };

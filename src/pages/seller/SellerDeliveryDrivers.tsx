@@ -10,6 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContactButton } from "@/components/ContactButton";
+import { DriverRatingDialog } from "@/components/DriverRatingDialog";
 
 const SellerDeliveryDrivers = () => {
   const { user } = useAuth();
@@ -19,7 +21,12 @@ const SellerDeliveryDrivers = () => {
   const [assigning, setAssigning] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"rating" | "price" | "deliveries">("rating");
-  const [view, setView] = useState<"browse" | "assigned">("browse");
+  const [ratingDialog, setRatingDialog] = useState<{
+    isOpen: boolean;
+    driverId?: string;
+    driverName?: string;
+    orderId?: string;
+  }>({ isOpen: false });
 
   const { data: availableDrivers = [] } = useQuery({
     queryKey: ["available-drivers", sortBy],
@@ -53,9 +60,8 @@ const SellerDeliveryDrivers = () => {
       if (!user) return [];
       const { data } = await supabase
         .from("delivery_jobs")
-        .select("*")
+        .select("*, driver:profiles!driver_id(*)")
         .eq("seller_id", user.id)
-        .in("status", ["pending", "accepted", "in_transit"])
         .order("created_at", { ascending: false });
       return data || [];
     },
@@ -275,34 +281,76 @@ const SellerDeliveryDrivers = () => {
                 <p className="text-xs text-muted-foreground mt-2">Drivers you assign will appear here</p>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {assignedDrivers.map((job: any) => (
-                  <Card key={job.id}>
+                  <Card key={job.id} className="overflow-hidden">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="font-semibold">Driver Assignment</p>
-                          <p className="text-xs text-muted-foreground">Order: {job.order_id.slice(0, 8)}...</p>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-full bg-muted flex-shrink-0 overflow-hidden">
+                            {job.driver?.avatar_url ? (
+                              <img src={job.driver.avatar_url} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xl">👤</div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold">{job.driver?.display_name || "Driver"}</p>
+                            <p className="text-[10px] text-muted-foreground">Job ID: {job.id.slice(0, 8)}</p>
+                          </div>
                         </div>
                         <Badge variant={
+                          job.status === "delivered" ? "outline" :
                           job.status === "in_transit" ? "default" :
                           job.status === "accepted" ? "secondary" : "outline"
                         }>
                           {job.status}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-3 gap-3 text-xs">
-                        <div className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          <span>ID: {job.id.slice(0, 6)}</span>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div className="flex flex-col">
+                          <span className="text-muted-foreground">Order ID</span>
+                          <span className="font-medium">{job.order_id.slice(0, 8)}...</span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-3 w-3" />
-                          <span>${job.price.toFixed(2)}</span>
+                        <div className="flex flex-col items-end">
+                          <span className="text-muted-foreground">Assigned on</span>
+                          <span className="font-medium">{new Date(job.created_at).toLocaleDateString()}</span>
                         </div>
-                        <div className="text-right text-muted-foreground">
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <ContactButton
+                          targetUserId={job.driver_id}
+                          targetUserName={job.driver?.display_name}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                        />
+                        {job.status === "delivered" && (
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1 gap-1"
+                            onClick={() => setRatingDialog({
+                              isOpen: true,
+                              driverId: job.driver_id,
+                              driverName: job.driver?.display_name,
+                              orderId: job.order_id,
+                            })}
+                          >
+                            <Star className="h-3 w-3" />
+                            Rate Driver
+                          </Button>
+                        )}
+                        <Link
+                          to={`/driver/${job.driver_id}`}
+                          className="flex-1"
+                        >
+                          <Button variant="ghost" size="sm" className="w-full">
+                            Profile
+                          </Button>
+                        </Link>
                       </div>
                     </CardContent>
                   </Card>
@@ -312,6 +360,14 @@ const SellerDeliveryDrivers = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <DriverRatingDialog
+        open={ratingDialog.isOpen}
+        onOpenChange={(open) => setRatingDialog(prev => ({ ...prev, isOpen: open }))}
+        driverId={ratingDialog.driverId || ""}
+        driverName={ratingDialog.driverName}
+        orderId={ratingDialog.orderId}
+      />
     </div>
   );
 };
