@@ -22,7 +22,7 @@ const ProductDetail = () => {
   const { data: product, isLoading, error } = useQuery({
     queryKey: ["product", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("products").select("*").eq("id", id).single();
+      const { data, error } = await supabase.from("products").select("*").eq("id", id).maybeSingle();
       if (error) {
         console.error("Error fetching product:", error);
         throw error;
